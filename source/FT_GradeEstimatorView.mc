@@ -63,6 +63,9 @@ class GradeEstimatorView extends WatchUi.DataField {
     var GRADE_LOGGING_ENALBED as Boolean = false;
     var FIELD_SETUP_ERROR as Boolean = false;
     var gradeField, climbDistField, lapAvgGradeField, maxGradeForTimeField;
+    // Data fields have a shared 32-byte budget per FIT message type.
+    const DISTANCE_FIELD_CAPACITY = 14;
+    const HELD_FIELD_CAPACITY = 18;
 
     // UI
     var label_light_str as String         = "---"; // Label for light distance
@@ -250,7 +253,7 @@ class GradeEstimatorView extends WatchUi.DataField {
             }
 
             var distanceKm = distanceMeters / 1000.0;
-            if (distanceKm >= 100.0) { return distanceKm.format("%.0f") + getRawUnitString(UNIT_DIST_LONG); }
+            if (distanceKm >= 99.95) { return distanceKm.format("%.0f") + getRawUnitString(UNIT_DIST_LONG); }
             else { return distanceKm.format("%.1f") + getRawUnitString(UNIT_DIST_LONG); }
         }
 
@@ -260,7 +263,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         }
 
         var distanceMi = getValueInLocalUnit(distanceMeters / 1000.0, UNIT_DIST_LONG);
-        if (distanceMi >= 100.0) { return distanceMi.format("%.0f") + getRawUnitString(UNIT_DIST_LONG); }
+        if (distanceMi >= 99.95) { return distanceMi.format("%.0f") + getRawUnitString(UNIT_DIST_LONG); }
         else { return distanceMi.format("%.1f") + getRawUnitString(UNIT_DIST_LONG); }
     }
 
@@ -310,8 +313,6 @@ class GradeEstimatorView extends WatchUi.DataField {
 
         isMetric = System.getDeviceSettings().distanceUnits == System.UNIT_METRIC;
 
-        initializeFields();
-
         // Read Settings
         updateSettings();
 
@@ -327,52 +328,40 @@ class GradeEstimatorView extends WatchUi.DataField {
 
         var gradeLoggingEnabled = Application.Properties.getValue("enable_grade_logging");
         if (gradeLoggingEnabled instanceof Boolean) { GRADE_LOGGING_ENALBED = gradeLoggingEnabled; }
-        else { GRADE_LOGGING_ENALBED = true; }
+        else { GRADE_LOGGING_ENALBED = false; }
 
-        FIELD_SETUP_ERROR = true;
-
-        try {
-            if (GRADE_LOGGING_ENALBED) {
-                if (gradeField == null) {
-                    gradeField = createField(
-                        WatchUi.loadResource(Rez.Strings.GC_ChartTitle_Grade), 30,
-                        FitContributor.DATA_TYPE_FLOAT,
-                        {:mesgType=>FitContributor.MESG_TYPE_RECORD, :units=>WatchUi.loadResource(Rez.Strings.Unit_Grade) }
-                    );
-                }
-            }
-            else { gradeField = null; }
-
-            if (climbDistField == null) {
-                // Session totals
-                climbDistField = createField(
-                    WatchUi.loadResource(Rez.Strings.GC_ClimbDist), 31,
-                    FitContributor.DATA_TYPE_STRING,
-                    {:mesgType=>FitContributor.MESG_TYPE_SESSION, :units=>"", :count=>16 }
-                );
-
-                maxGradeForTimeField = createField(
-                    WatchUi.loadResource(Rez.Strings.GC_MaxGrdTime), 37,
-                    FitContributor.DATA_TYPE_STRING,
-                    {:mesgType=>FitContributor.MESG_TYPE_SESSION, :units=>WatchUi.loadResource(Rez.Strings.Unit_Grade), :count=>16}
-                );
-
-                // Lap Fields
-                lapAvgGradeField = createField(
-                    WatchUi.loadResource(Rez.Strings.GC_Lap_AvgGrade), 36,
+        // Retry each missing field independently. Existing registrations and data survive
+        // settings changes, including toggling per-record logging off and back on.
+        if (GRADE_LOGGING_ENALBED && gradeField == null) {
+            try {
+                gradeField = createField(WatchUi.loadResource(Rez.Strings.GC_ChartTitle_Grade), 30,
                     FitContributor.DATA_TYPE_FLOAT,
-                    {:mesgType=>FitContributor.MESG_TYPE_LAP, :units=>WatchUi.loadResource(Rez.Strings.Unit_Grade)}
-                );
-            }
-        } 
-        catch (ex) { }
-
-        if (gradeField != null) { gradeField.setData(0.0); }
-        if (climbDistField != null) { climbDistField.setData(getLoggedDistanceString(0.0) + " / " + getLoggedDistanceString(0.0)); }
-        if (lapAvgGradeField != null) { lapAvgGradeField.setData(0.0); }
-        if (maxGradeForTimeField != null) { maxGradeForTimeField.setData("NA/NA/NA"); }
-
-        FIELD_SETUP_ERROR = false;
+                    {:mesgType=>FitContributor.MESG_TYPE_RECORD, :units=>WatchUi.loadResource(Rez.Strings.Unit_Grade)});
+            } catch (ex) { System.println("Grade FIT field: " + ex.getErrorMessage()); }
+        }
+        if (climbDistField == null) {
+            try {
+                climbDistField = createField(WatchUi.loadResource(Rez.Strings.GC_ClimbDist), 31,
+                    FitContributor.DATA_TYPE_STRING,
+                    {:mesgType=>FitContributor.MESG_TYPE_SESSION, :units=>"", :count=>DISTANCE_FIELD_CAPACITY});
+            } catch (ex) { System.println("Distance FIT field: " + ex.getErrorMessage()); }
+        }
+        if (maxGradeForTimeField == null) {
+            try {
+                maxGradeForTimeField = createField(WatchUi.loadResource(Rez.Strings.GC_MaxGrdTime), 37,
+                    FitContributor.DATA_TYPE_STRING,
+                    {:mesgType=>FitContributor.MESG_TYPE_SESSION, :units=>WatchUi.loadResource(Rez.Strings.Unit_Grade), :count=>HELD_FIELD_CAPACITY});
+            } catch (ex) { System.println("Held grade FIT field: " + ex.getErrorMessage()); }
+        }
+        if (lapAvgGradeField == null) {
+            try {
+                lapAvgGradeField = createField(WatchUi.loadResource(Rez.Strings.GC_Lap_AvgGrade), 36,
+                    FitContributor.DATA_TYPE_FLOAT,
+                    {:mesgType=>FitContributor.MESG_TYPE_LAP, :units=>WatchUi.loadResource(Rez.Strings.Unit_Grade)});
+            } catch (ex) { System.println("Lap FIT field: " + ex.getErrorMessage()); }
+        }
+        FIELD_SETUP_ERROR = (GRADE_LOGGING_ENALBED && gradeField == null) ||
+            climbDistField == null || maxGradeForTimeField == null || lapAvgGradeField == null;
     }
 
     function initializeGradeHistogram() {
@@ -644,7 +633,7 @@ class GradeEstimatorView extends WatchUi.DataField {
 
     function writeRecordFields() as Void {
         if (!LOGGING_ENALBED) { return; }
-        if (gradeField == null) { return; }
+        if (!GRADE_LOGGING_ENALBED || gradeField == null) { return; }
 
         try { gradeField.setData(grade * 100.0); }
         catch (ex) { FIELD_SETUP_ERROR = true; }
@@ -667,14 +656,15 @@ class GradeEstimatorView extends WatchUi.DataField {
         // Construct and save climb distance field data
         var climbDistString = "";
 
-        climbDistString = getLoggedDistanceString(distLight) + " / " + getLoggedDistanceString(distSteep);
+        climbDistString = getLoggedDistanceString(distLight) + "/" + getLoggedDistanceString(distSteep);
         
-        if (climbDistField != null) { climbDistField.setData(climbDistString); } else { }
+        // FIT strings include a trailing NUL byte. These strings use ASCII only.
+        if (climbDistString.length() + 1 > DISTANCE_FIELD_CAPACITY) { climbDistString = "NA"; }
+        if (climbDistField != null) { climbDistField.setData(climbDistString); }
 
         var maxGrdTime = getLoggedHeldGrade(10.0) + "/" + getLoggedHeldGrade(60.0) + "/" + getLoggedHeldGrade(1800.0);
-
-        if (maxGrdTime.length() + 1 > 16) { maxGrdTime = "NA/NA/NA"; }
-        if (maxGradeForTimeField != null) { maxGradeForTimeField.setData(maxGrdTime); } else { }
+        if (maxGrdTime.length() + 1 > HELD_FIELD_CAPACITY) { maxGrdTime = "NA/NA/NA"; }
+        if (maxGradeForTimeField != null) { maxGradeForTimeField.setData(maxGrdTime); }
     }
 
     function getLoggedHeldGrade(seconds as Float) as String {
