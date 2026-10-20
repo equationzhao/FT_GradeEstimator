@@ -109,3 +109,49 @@ performance gate. Its layout cache and supporting changes to internal cache test
 were reverted. The independent first-draw, layout-switch and unit-change regression
 added with the benchmark remains. No formatting cache or partial-redraw pipeline
 was introduced.
+
+
+## Follow-up final comparison
+
+Production source `e95fef0` was compared directly with `f634e28` using the final
+harness. These are measured aggregate changes, not sums of round percentages.
+The final build passed all 27 ordinary regressions and exact frozen-reference
+parity on all 16,800 samples. The retained changes are rounds 8–10; round 11 is
+absent from production.
+
+| Workload | Starting median (ms) | Final median (ms) | Paired time reduction | 95% interval | Winning pairs |
+| --- | ---: | ---: | ---: | --- | ---: |
+| Default calculation, 1,200 samples | 467 | 307 | 33.98% | 31.48–35.27% | 9/9 |
+| Calculation + drawing, 500 samples | 345 | 279 | 18.80% | 15.77–20.58% | 8/9 |
+| Fixed 180-sample window, 240 samples | 641 | 369 | 42.54% | 42.28–42.90% | 9/9 |
+| Fixed seven-sample window, 1,200 samples | 181 | 118 | 34.83% | 34.08–35.56% | 9/9 |
+| Changing adaptive 7–180 window, 1,200 samples | 313 | 293 | 6.75% | 5.43–7.28% | 9/9 |
+| Precomputed default inputs, 600 samples | 227 | 151 | 33.91% | 33.33–34.93% | 9/9 |
+| Precomputed adaptive 7–180 inputs, 600 samples | 203 | 186 | 7.66% | 7.14–8.46% | 9/9 |
+
+Changing adaptive 7–20 input (4.37%) and native FIT recording with pause/resume
+(4.39%) did not clear the 5% gate. Paused, dynamic and imperial drawing, and cold
+construction/first drawing had 0.00% paired median change. Size/unit switching was
+−0.56% (−1.14–1.13%). No scenario showed a confirmed regression. See
+`followup-final-vs-start*.json` for all 14 workloads and the original pairs.
+Default view setup allocation increased from 2,056 to 2,088 bytes (+32 bytes).
+
+
+The final six-scenario identical-source A/A check ranged from −0.34% to +0.37%
+in paired median difference, with no false improvements. Its raw pairs are in
+`followup-final-aa.json`. The separate longer-warm-up adaptive A/A check is in
+`round10-long-warm-aa.json`; the eight-workload starting calibration is in
+`extended-baseline-aa.json`.
+
+The diagnostic default workload kept its window unchanged for 1,184/1,200 samples
+(98.67%), with 11 increases and five decreases. The two deliberately changing
+workloads kept their windows unchanged for only 69/1,200 and 68/1,200 samples
+(5.75% and 5.67%). These counters were collected in a separate diagnostic run;
+production and timed batches contain no counters.
+
+The signed Edge 540 release is 15,292 bytes, up from 14,812 (+480 bytes). It launched
+successfully and displayed all six fields after switching from one full-screen
+field to the four-row layout. The simulator showed approximately 14.3 KB overall,
+versus 13.8 KB before this series. Both retained calculation improvements and their
+small memory/code-size cost should be considered. There is no physical-device
+or battery-life measurement.
