@@ -49,4 +49,6 @@ monkeydo "$PWD/bin/PersonalRegression.prg" edge540 -t
 
 Require the complete all-pass summary. SDK 9.2 may return exit code 1 even when its test summary reports success. Tests cover grade and distance calculations, activity transitions, native ascent, missing data, settings bounds, FIT failures and capacity, and a two-hour input sequence. Production builds exclude the tests.
 
+For repeatable calculation and rendering comparisons, see the [performance benchmark](performance/README.md) and [optimization results](performance/RESULTS.md). It includes A/A noise controls, paired A/B timings, and an exact sample-by-sample comparison against the original personal edition.
+
 Based on [Adaptive Grade Plus by FrederikTheisen](https://github.com/FrederikTheisen/FT_GradeEstimator).

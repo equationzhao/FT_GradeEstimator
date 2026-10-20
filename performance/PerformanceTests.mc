@@ -53,6 +53,16 @@ function performanceBatch(view, dc, mode, count) {
 
 (:test)
 function performanceAB(logger as Test.Logger) as Boolean {
+    return runPerformanceComparison(logger,false);
+}
+
+(:test)
+function performanceAA(logger as Test.Logger) as Boolean {
+    return runPerformanceComparison(logger,true);
+}
+
+function runPerformanceComparison(logger as Test.Logger, identical as Boolean) as Boolean {
+    logger.debug(identical ? "Comparison=A/A" : "Comparison=A/B");
     var bitmap=performanceBitmap(); var dc=bitmap.getDc();
     var counts=[500,500,1200,500,240,1200];
     for (var mode=0;mode<counts.size();mode++) {
@@ -66,7 +76,7 @@ function performanceAB(logger as Test.Logger) as Boolean {
             Application.Properties.setValue("buffer_fit_max",7);
         }
         var before=System.getSystemStats().usedMemory;
-        var a=new ControlView();
+        var a=identical ? new GradeEstimatorView() : new ControlView();
         performanceSetup(a,mode); a.onUpdate(dc);
         var aMemory=System.getSystemStats().usedMemory-before;
         before=System.getSystemStats().usedMemory;
