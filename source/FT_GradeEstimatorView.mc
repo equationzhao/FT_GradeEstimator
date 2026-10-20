@@ -617,11 +617,16 @@ class GradeEstimatorView extends WatchUi.DataField {
 
     function onTimerPause() as Void {
         writeSessionFields();
+        _resetAll();
     }
 
     function onTimerStop() as Void {
         writeSessionFields();
+        _resetAll();
     }
+
+    function onTimerStart() as Void { _resetAll(); }
+    function onTimerResume() as Void { _resetAll(); }
 
     function writeRecordFields() as Void {
         if (!LOGGING_ENALBED) { return; }
@@ -668,7 +673,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         var altitude = (info has :altitude) ? info.altitude : null;
         var elapsed = (info has :elapsedTime) ? info.elapsedTime : null;
         if (speed == null || altitude == null || elapsed == null ||
-            speed <= 0.0) {
+            info.timerState != Activity.TIMER_STATE_ON || speed <= 0.0) {
             _resetAll();
             return 0;
         }
