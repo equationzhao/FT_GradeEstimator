@@ -145,7 +145,6 @@ function wideLayoutFontsFit(logger as Test.Logger) as Boolean {
 function restoreTestProperties() {
     Application.Properties.setValue("enable_logging", false);
     Application.Properties.setValue("enable_grade_logging", false);
-    Application.Properties.setValue("buffer_length", 35);
     Application.Properties.setValue("buffer_fit_min", 7);
     Application.Properties.setValue("buffer_fit_max", 20);
     Application.Properties.setValue("threshold_log_dist", 0.1);
@@ -356,7 +355,7 @@ function missingDataAndAltitudeJumpRestartBuffer(logger as Test.Logger) as Boole
 (:test)
 function settingsStayBounded(logger as Test.Logger) as Boolean {
     var v=originalView();
-    Application.Properties.setValue("buffer_length",-5); Application.Properties.setValue("buffer_fit_min",300);
+    Application.Properties.setValue("buffer_fit_min",300);
     Application.Properties.setValue("buffer_fit_max",-10); Application.Properties.setValue("threshold_log_max",2);
     Application.Properties.setValue("threshold_log_dist",-1);
     v.updateSettings();
@@ -418,6 +417,6 @@ function twoHourRideRemainsStable(logger as Test.Logger) as Boolean {
     var v=originalView();
     for (var t=1; t<=7200; t++) { v.compute(sample(t,3.0,100.0+0.3*t,Activity.TIMER_STATE_ON)); }
     logger.debug("2h grade="+v.grade.toString()+" distance="+v.distLight.toString());
-    return v.calculating && (v.grade-0.1).abs()<0.001 && v.buffer.size()==35 &&
+    return v.calculating && (v.grade-0.1).abs()<0.001 && v.buffer.size()==v.MAX_GRADE_WINDOW &&
         v.regressionDistances.size()==20 && v.distLight>21000.0;
 }

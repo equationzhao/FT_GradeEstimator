@@ -1,6 +1,5 @@
 <resources xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://developer.garmin.com/downloads/connect-iq/resources.xsd">
   <properties>
-    <property id="buffer_length" type="number">35</property>
     <property id="buffer_fit_max" type="number">20</property>
     <property id="buffer_fit_min" type="number">7</property>
     <property id="threshold_log_dist" type="float">0.1</property>
@@ -18,9 +17,6 @@
       <settingConfig type="boolean" />
     </setting>
     <group id="group_sample_buffer" title="@Strings.group_title_buffer" description="@Strings.group_desc_buffer">
-      <setting propertyKey="@Properties.buffer_length" title="@Strings.buffer_length">
-        <settingConfig type="numeric" />
-      </setting>
       <setting propertyKey="@Properties.buffer_fit_max" title="@Strings.buffer_fit_max">
         <settingConfig type="numeric" />
       </setting>

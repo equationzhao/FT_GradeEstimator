@@ -1,0 +1,4 @@
+<resources>
+  <!-- Historical controls require this property; production excludes it. -->
+  <properties><property id="buffer_length" type="number">35</property></properties>
+</resources>

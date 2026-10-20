@@ -11,7 +11,7 @@ The status row shows calculation quality, buffering, pause/stop state, and FIT e
 
 Total ascent comes directly from Garmin's current activity data. It updates independently of grade calculation, remains visible while stopped or paused, and clears when the activity resets. A temporarily unavailable reading retains the last valid total; before the first reading, the field shows `--`.
 
-Light and hard distances use configurable grade thresholds (3.5% and 8% by default) and count only accepted samples while the activity timer runs. Maximum grade uses the configured fit-quality threshold. Stops, missing sensor data, altitude jumps, and excessive sampling gaps restart the grade estimator without clearing activity totals.
+Light and hard distances use configurable grade thresholds (3.5% and 8% by default) and count only accepted samples while the activity timer runs. Maximum grade uses the configured fit-quality threshold. The sample buffer holds only the configured maximum fit window. Stops, missing sensor data, altitude jumps, and excessive sampling gaps restart the grade estimator without clearing activity totals.
 
 ## FIT recording
 

@@ -20,6 +20,8 @@ the benchmark, reference implementation, and control implementation.
 | 5 | Cache formatted strings by exact input and units | Changing-page rendering **12.7% slower** (11.2–14.0% slowdown); paused rendering had no improvement | Reject and restore round 4; preserve native rounding behavior |
 | 5b | Embed units/prefixes in numeric format patterns | SDK raised `Invalid Value: Unexpected input to format`; correctness tests rejected the candidate before timing | Reject and restore round 4 |
 
+| 6 | Match buffer capacity to the maximum fit window | Default view allocation reduced by 672 bytes; fixed seven-sample allocation reduced by 1,256 bytes; timing changes within noise | Keep for memory savings; remove the redundant buffer-length setting |
+
 ## Reproducibility and limits
 
 See [the benchmark method](README.md) and the raw paired timings in `results/`.

@@ -9,7 +9,7 @@ import Toybox.WatchUi;
 
 // Edge 540 personal edition: a single full-width, three-column data field.
 class GradeEstimatorView extends WatchUi.DataField {
-    var SAMPLE_WINDOW = 35;
+    var SAMPLE_WINDOW = 20;
     var MIN_GRADE_WINDOW = 7;
     var MAX_GRADE_WINDOW = 20;
     var THRESHOLD_LIGHT = 0.035;
@@ -74,10 +74,9 @@ class GradeEstimatorView extends WatchUi.DataField {
     }
 
     function updateSettings() {
-        SAMPLE_WINDOW = clamp(readNumber("buffer_length",35.0),10.0,180.0).toNumber();
         MIN_GRADE_WINDOW = clamp(readNumber("buffer_fit_min",7.0),3.0,180.0).toNumber();
         MAX_GRADE_WINDOW = clamp(readNumber("buffer_fit_max",20.0),MIN_GRADE_WINDOW.toFloat(),180.0).toNumber();
-        if (SAMPLE_WINDOW < MAX_GRADE_WINDOW) { SAMPLE_WINDOW = MAX_GRADE_WINDOW; }
+        SAMPLE_WINDOW = MAX_GRADE_WINDOW;
         DIST_LOG_QUALITY = clamp(readNumber("threshold_log_dist",0.1),0.0,1.0);
         MAX_LOG_QUALITY = clamp(readNumber("threshold_log_max",0.5),0.0,1.0);
         THRESHOLD_LIGHT = clamp(readNumber("threshold_light",3.5),0.0,30.0) / 100.0;

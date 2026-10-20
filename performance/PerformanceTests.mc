@@ -57,6 +57,7 @@ function performanceAB(logger as Test.Logger) as Boolean {
     var counts=[500,500,1200,500,240,1200];
     for (var mode=0;mode<counts.size();mode++) {
         restoreTestProperties();
+        Application.Properties.setValue("buffer_length",35);
         if (mode==4) {
             Application.Properties.setValue("buffer_fit_min",180);
             Application.Properties.setValue("buffer_fit_max",180);
@@ -105,6 +106,7 @@ function performanceAB(logger as Test.Logger) as Boolean {
 function referenceSampleParity(logger as Test.Logger) as Boolean {
     for (var config=0;config<4;config++) {
         restoreTestProperties();
+        Application.Properties.setValue("buffer_length",35);
         if (config==1) {
             Application.Properties.setValue("buffer_fit_min",3);
             Application.Properties.setValue("buffer_fit_max",3);

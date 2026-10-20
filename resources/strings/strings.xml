@@ -7,15 +7,14 @@
   <string id="Unit_Distance_Mixed" />
   <string id="enable_logging">Enable FIT Logging</string>
   <string id="enable_grade_logging">Log Gradient Data</string>
-  <string id="buffer_length">Sample Buffer Size (samples)</string>
   <string id="buffer_fit_max">Max Samples for Grade Fit</string>
   <string id="buffer_fit_min">Min Samples for Grade Fit (≥3)</string>
   <string id="threshold_log_dist">Climbing Distance (0.0-1.0)</string>
   <string id="threshold_log_max">Max Grade (0.0-1.0)</string>
   <string id="threshold_light">“Light” Climb Threshold (%)</string>
   <string id="threshold_steep">“Hard” Climb Threshold (%)</string>
-  <string id="group_title_buffer">Sample Buffer Settings</string>
-  <string id="group_desc_buffer">Adjust altitude buffer size and fit sample count.</string>
+  <string id="group_title_buffer">Grade Fit Window</string>
+  <string id="group_desc_buffer">Set minimum and maximum sample counts. The buffer uses the maximum.</string>
   <string id="group_title_log">Linear Fit Quality Thresholds</string>
   <string id="group_desc_log">Minimum linear fit quality to log values.</string>
   <string id="group_title_climb">Climbing Classification Gradients</string>
