@@ -44,6 +44,13 @@ class GradeEstimatorView extends WatchUi.DataField {
     var climbDistField;
     var lightLabel = "";
     var steepLabel = "";
+    var fontChoices = [Graphics.FONT_SYSTEM_NUMBER_MEDIUM,Graphics.FONT_SYSTEM_MEDIUM,
+        Graphics.FONT_SYSTEM_SMALL,Graphics.FONT_SYSTEM_TINY,Graphics.FONT_SYSTEM_XTINY];
+    var fontHeights = null;
+    var labelTexts = [null,null,null,null,null,null];
+    var labelFonts = [0,0,0,0,0,0];
+    var labelWidths = [0,0,0,0,0,0];
+    var labelHeights = [0,0,0,0,0,0];
 
     function initialize() {
         DataField.initialize();
@@ -351,20 +358,37 @@ class GradeEstimatorView extends WatchUi.DataField {
 
     // Choose the largest legible font that fits the available cell, including units.
     function fitFont(dc as Graphics.Dc, text as String, width as Number, height as Number, numeric as Boolean) {
-        var fonts = numeric ? [Graphics.FONT_SYSTEM_NUMBER_MEDIUM,Graphics.FONT_SYSTEM_MEDIUM,Graphics.FONT_SYSTEM_SMALL,Graphics.FONT_SYSTEM_TINY,Graphics.FONT_SYSTEM_XTINY] :
-            [Graphics.FONT_SYSTEM_TINY,Graphics.FONT_SYSTEM_XTINY];
-        for (var i=0; i<fonts.size(); i++) {
-            if (dc.getTextWidthInPixels(text,fonts[i]) <= width && dc.getFontHeight(fonts[i]) <= height) { return fonts[i]; }
+        if (fontHeights == null) {
+            fontHeights = [];
+            for (var i=0;i<fontChoices.size();i++) {
+                fontHeights.add(dc.getFontHeight(fontChoices[i]));
+            }
+        }
+        for (var i=numeric ? 0 : 3;i<fontChoices.size();i++) {
+            if (fontHeights[i] <= height && dc.getTextWidthInPixels(text,fontChoices[i]) <= width) {
+                return fontChoices[i];
+            }
         }
         return Graphics.FONT_SYSTEM_XTINY;
     }
 
-    function drawCell(dc as Graphics.Dc, label as String, value as String, x as Number, y as Number, width as Number, height as Number) {
+    function labelFont(dc, text, width, height, cell) {
+        if (labelTexts[cell] == null || !labelTexts[cell].equals(text) ||
+            labelWidths[cell] != width || labelHeights[cell] != height) {
+            labelFonts[cell] = fitFont(dc,text,width,height,false);
+            labelTexts[cell] = text;
+            labelWidths[cell] = width;
+            labelHeights[cell] = height;
+        }
+        return labelFonts[cell];
+    }
+
+    function drawCell(dc as Graphics.Dc, label as String, value as String, x as Number, y as Number, width as Number, height as Number, cell as Number) {
         var labelHeight = (height*0.34).toNumber();
         var valueHeight = height-labelHeight;
         var center = x+width/2;
         dc.setClip(x,y,width,height);
-        dc.drawText(center,y+labelHeight/2,fitFont(dc,label,width-2,labelHeight,false),label,
+        dc.drawText(center,y+labelHeight/2,labelFont(dc,label,width-2,labelHeight,cell),label,
             Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER);
         dc.drawText(center,y+labelHeight+valueHeight/2,fitFont(dc,value,width-2,valueHeight,true),value,
             Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER);
@@ -396,11 +420,11 @@ class GradeEstimatorView extends WatchUi.DataField {
         var colWidth = width/3;
         var current = calculating ? (grade*100.0).format("%+.1f")+"%" : "--";
         var currentVam = calculating ? (vam*(isMetric ? 1.0 : 3.28084)).format("%.0f") : "--";
-        drawCell(dc,"Grade",current,0,statusHeight,colWidth,rowHeight);
-        drawCell(dc,lightLabel,getDistanceString(distLight),colWidth,statusHeight,colWidth,rowHeight);
-        drawCell(dc,"VAM "+(isMetric ? "m/h" : "ft/h"),currentVam,2*colWidth,statusHeight,width-2*colWidth,rowHeight);
-        drawCell(dc,"Max Grade",(maxGrade*100.0).format("%.1f")+"%",0,statusHeight+rowHeight,colWidth,rowHeight);
-        drawCell(dc,steepLabel,getDistanceString(distSteep),colWidth,statusHeight+rowHeight,colWidth,rowHeight);
-        drawCell(dc,"Total Ascent",getAscentString(),2*colWidth,statusHeight+rowHeight,width-2*colWidth,rowHeight);
+        drawCell(dc,"Grade",current,0,statusHeight,colWidth,rowHeight,0);
+        drawCell(dc,lightLabel,getDistanceString(distLight),colWidth,statusHeight,colWidth,rowHeight,1);
+        drawCell(dc,"VAM "+(isMetric ? "m/h" : "ft/h"),currentVam,2*colWidth,statusHeight,width-2*colWidth,rowHeight,2);
+        drawCell(dc,"Max Grade",(maxGrade*100.0).format("%.1f")+"%",0,statusHeight+rowHeight,colWidth,rowHeight,3);
+        drawCell(dc,steepLabel,getDistanceString(distSteep),colWidth,statusHeight+rowHeight,colWidth,rowHeight,4);
+        drawCell(dc,"Total Ascent",getAscentString(),2*colWidth,statusHeight+rowHeight,width-2*colWidth,rowHeight,5);
     }
 }

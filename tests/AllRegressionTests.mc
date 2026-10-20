@@ -6,6 +6,42 @@ import Toybox.FitContributor;
 import Toybox.System;
 import Toybox.Graphics;
 
+function referenceFont(dc, text, width, height, numeric) {
+    var fonts=numeric ? [Graphics.FONT_SYSTEM_NUMBER_MEDIUM,Graphics.FONT_SYSTEM_MEDIUM,
+        Graphics.FONT_SYSTEM_SMALL,Graphics.FONT_SYSTEM_TINY,Graphics.FONT_SYSTEM_XTINY] :
+        [Graphics.FONT_SYSTEM_TINY,Graphics.FONT_SYSTEM_XTINY];
+    for (var i=0;i<fonts.size();i++) {
+        if (dc.getTextWidthInPixels(text,fonts[i])<=width && dc.getFontHeight(fonts[i])<=height) {
+            return fonts[i];
+        }
+    }
+    return Graphics.FONT_SYSTEM_XTINY;
+}
+
+(:test)
+function labelCacheInvalidation(logger as Test.Logger) as Boolean {
+    var bitmap=Graphics.createBufferedBitmap({:width=>246,:height=>106,
+        :palette=>[Graphics.COLOR_BLACK,Graphics.COLOR_WHITE]}).get();
+    var dc=bitmap.getDc(); var view=originalView();
+    // The first rendering must work before any activity sample exists.
+    view.onUpdate(dc);
+    var labels=["Grade","VAM m/h","VAM ft/h","Climb 30.0%+","Total Ascent"];
+    for (var i=0;i<labels.size();i++) {
+        for (var width=30;width<=90;width+=30) {
+            for (var height=10;height<=20;height+=5) {
+                var expected=referenceFont(dc,labels[i],width,height,false);
+                if (view.labelFont(dc,labels[i],width,height,0)!=expected ||
+                    view.labelFont(dc,labels[i],width,height,0)!=expected) { return false; }
+            }
+        }
+    }
+    Application.Properties.setValue("threshold_light",12.5);
+    view.updateSettings(); view.isMetric=false; view.onUpdate(dc);
+    var ok=view.labelTexts[1].equals("Climb 12.5%+") && view.labelTexts[2].equals("VAM ft/h");
+    restoreTestProperties();
+    return ok;
+}
+
 (:test)
 function wideLayoutFontsFit(logger as Test.Logger) as Boolean {
     var bitmap = Graphics.createBufferedBitmap({
