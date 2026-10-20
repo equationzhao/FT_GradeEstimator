@@ -46,9 +46,13 @@ The exact menu names vary slightly between Edge models and firmware versions.
 | Current grade | Adaptive regression estimate of the current slope |
 | Climbing distance | Distance ridden above the configurable light and hard grade thresholds |
 | VAM | Current and average vertical ascent rate |
-| Sustained grade | Highest grade maintained for 10 seconds and longer time windows |
+| Sustained grade | Highest continuous time-window average grade for 10 seconds and longer windows |
 | Quality/status | Indicates buffering, active calculation, missing data, or FIT logging issues |
 | Graphs | Recent altitude samples, grade distribution, or both |
+
+Sustained grade uses continuous windows of 10 seconds, 1 minute, 5, 10, 15, 20, and 30 minutes. It integrates the estimated grade over time and evaluates averages on a one-second grid. The histogram remains a separate, time-weighted distribution. A window is unavailable (`--` on screen, `NA` in FIT) until enough consecutive, acceptable-quality data exists. Pauses, stops, missing data, altitude jumps, and gaps longer than five seconds break continuity; completed best values remain available until the activity resets. Changing settings starts a new continuous segment and applies quality thresholds to subsequent samples.
+
+Statistics accumulate only while the activity timer runs. Climbing VAM and lap-average grade are weighted by the actual sample duration. A new activity clears all session and lap totals. Stopped or missing sensor data clears the current estimate and triggers buffering on recovery.
 
 On touch-capable, compatible layouts, tap the graph area to cycle through the available graph modes.
 
@@ -67,8 +71,10 @@ Session summary recording is enabled by default. Adaptive Grade Plus can add the
 
 - Light and hard climbing distance totals
 - Lap-average grade
-- Maximum grade held for 10 seconds, 1 minute, and 30 minutes
+- Highest continuous average grade over 10 seconds, 1 minute, and 30 minutes
 - Continuous grade samples when **Log Gradient Data** is enabled
+
+The two FIT session strings share the platform's 32-byte limit. Distances use compact formatting such as `100km/12.3km`; an unrepresentable total is recorded as `NA` rather than overflowing the field. Held-grade values retain one decimal place, including negative values.
 
 Continuous grade logging is disabled by default and can be enabled independently in the data field settings.
 
@@ -108,15 +114,35 @@ The project is written in [Monkey C](https://developer.garmin.com/connect-iq/mon
 ### Build from the command line
 
 ```sh
-git clone https://github.com/FrederikTheisen/FT_GradeEstimator.git
+git clone https://github.com/equationzhao/FT_GradeEstimator.git
 cd FT_GradeEstimator
 monkeyc -f monkey.jungle \
-  -d edge840 \
+  -d edge540 \
   -o AdaptiveGradePlus.prg \
   -y /path/to/developer_key
 ```
 
-Replace `edge840` with another product ID from [`manifest.xml`](manifest.xml) when targeting a different supported device. You can also build and run the data field directly from the Monkey C extension in Visual Studio Code.
+Replace `edge540` with another product ID from [`manifest.xml`](manifest.xml) when targeting a different supported device. You can also build and run the data field directly from the Monkey C extension in Visual Studio Code.
+
+### Native regression tests
+
+Open the Connect IQ simulator (`connectiq`), wait for its window to finish loading, then run:
+
+```sh
+mkdir -p bin
+monkeyc -f tests.jungle -d edge540 --unit-test \
+  -o bin/RegressionTests.prg -y /path/to/developer_key
+monkeydo "$PWD/bin/RegressionTests.prg" edge540 -t
+```
+
+These commands build `tests.jungle` and run the 27 cases in `tests/AllRegressionTests.mc` on Edge 540. Require the complete `PASSED (passed=27, failed=0, errors=0)` summary: SDK 9.2 can return exit code 1 even when all tests pass. `monkey.jungle` includes only production sources, so the installable build excludes test helpers and reproduction snapshots.
+
+To build a signed Edge 540 release:
+
+```sh
+monkeyc -f monkey.jungle -d edge540 -r \
+  -o bin/AdaptiveGradePlus-edge540-fixed.prg -y /path/to/developer_key
+```
 
 ## Feedback and contributions
 
