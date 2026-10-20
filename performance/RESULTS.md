@@ -86,8 +86,19 @@ samples. Each retained round must pass both suites.
 | --- | --- | --- | --- |
 | 8 | Skip candidate selection for fixed windows | Fixed 180: 35.22% reduction (95% interval 34.49–36.03%); fixed 7: 31.52% (30.98–33.16%). Both 9/9 wins. Default calculation −0.66%; other workloads within the 5% threshold. | Keep |
 | 9 | Reuse candidate statistics and scratch distances when the final window is unchanged | Default calculation: 31.95% reduction (30.17–33.68%); calculation + drawing: 16.81% (15.79–18.10%); precomputed inputs: 32.02% first run, 31.86% repeat. No meaningful gain or regression for the low-hit-rate adaptive workload or FIT workload. | Keep; +32 bytes observed during view setup |
+| 10 | Increment and wrap regression indices instead of repeated modulo | Fixed 180: 11.79% reduction (10.76–12.44%); fixed 7: 6.92% (5.34–17.20%), both 9/9 wins. Default calculation 2.61%, below the acceptance threshold. | Keep for fixed-window gains; no additional view storage |
 
 Round 9's first extended run had cold-construction outliers (paired median −3.23%,
 interval −21.43–3.03%). Repeating the **same executable** produced 0.00% with an
 interval of −3.33–3.12%; both runs are retained. This is not a demonstrated cold
 startup regression or improvement. The ordinary and frozen-reference suites passed.
+
+Round 10's first two extended runs retained large first-scenario startup outliers.
+The extended compute warm-up was increased from 30 to 60 seconds, and focused
+7–20 checks were added. The longer A/A run gave 0.46% (−1.40–1.39%); the A/B run
+gave 4.07% (3.56–4.52%), all nine pairs faster, below the 5% improvement threshold
+and with no measured regression. The other adaptive results are not promoted as
+confirmed gains: the 7–180 workload dropped from 6.46% to 4.75% on repeat; the
+precomputed 7–180 interval also crossed 5%. All original runs remain available.
+A simulator load stalled before producing test output and was restarted before
+the focused checks; this was an infrastructure interruption, not a test failure.

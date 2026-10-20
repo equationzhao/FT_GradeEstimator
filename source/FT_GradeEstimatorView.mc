@@ -230,39 +230,48 @@ class GradeEstimatorView extends WatchUi.DataField {
 
     function computeLinearRegressionSlope(samples as Array<Float>, distances as Array<Float>, bufIndex as Number, windowSize as Number) {
         var xVals = regressionDistances;
+        var firstIndex = bufIndex - windowSize;
+        if (firstIndex < 0) { firstIndex += SAMPLE_WINDOW; }
+        var idx = firstIndex;
         var dist = 0.0;
         var sumX = 0.0, sumY = 0.0;
         calculating = true;
 
         // Use only the last windowSize samples
+        idx = firstIndex;
         for (var i = 0; i < windowSize; i++) {
-            var idx = (bufIndex + SAMPLE_WINDOW - windowSize + i) % SAMPLE_WINDOW;
             dist += distances[idx];
             xVals[i] = dist;
             sumY += samples[idx];
             sumX += xVals[i];
+            idx++;
+            if (idx == SAMPLE_WINDOW) { idx = 0; }
         }
         var meanX = sumX / windowSize;
         var meanY = sumY / windowSize;
 
         var covXY = 0.0, varX = 0.0;
+        idx = firstIndex;
         for (var i = 0; i < windowSize; i++) {
-            var idx = (bufIndex + SAMPLE_WINDOW - windowSize + i) % SAMPLE_WINDOW;
             var dx = xVals[i] - meanX;
             var dy = samples[idx] - meanY;
             covXY += dx * dy;
             varX += dx * dx;
+            idx++;
+            if (idx == SAMPLE_WINDOW) { idx = 0; }
         }
 
         grade = (varX > 0.0) ? (covXY / varX) : 0.0;
         var sse = 0.0;
+        idx = firstIndex;
         for (var i = 0; i < windowSize; i++) {
-            var idx = (bufIndex + SAMPLE_WINDOW - windowSize + i) % SAMPLE_WINDOW;
             var measAltDelta = samples[idx] - meanY;
             var AltDelta = grade * (xVals[i] - meanX);
             var res = (AltDelta - measAltDelta);
 
             sse += res*res;
+            idx++;
+            if (idx == SAMPLE_WINDOW) { idx = 0; }
         }
 
         if (varX > 0.0) {
@@ -277,24 +286,31 @@ class GradeEstimatorView extends WatchUi.DataField {
 
     function computeWindowSlope(samples as Array<Float>, distances as Array<Float>, bufIndex as Number, windowSize as Number, bufferLen as Number) as Float {
         var xVals = regressionDistances;
+        var firstIndex = bufIndex - windowSize;
+        if (firstIndex < 0) { firstIndex += bufferLen; }
+        var idx = firstIndex;
         var dist = 0.0;
         var sumX = 0.0, sumY = 0.0;
+        idx = firstIndex;
         for (var i = 0; i < windowSize; i++) {
-            var idx = (bufIndex + bufferLen - windowSize + i) % bufferLen;
             dist += distances[idx];
             xVals[i] = dist;
             sumY += samples[idx];
             sumX += xVals[i];
+            idx++;
+            if (idx == bufferLen) { idx = 0; }
         }
         var meanX = sumX / windowSize;
         var meanY = sumY / windowSize;
         var covXY = 0.0, varX = 0.0;
+        idx = firstIndex;
         for (var i = 0; i < windowSize; i++) {
-            var idx = (bufIndex + bufferLen - windowSize + i) % bufferLen;
             var dx = xVals[i] - meanX;
             var dy = samples[idx] - meanY;
             covXY += dx * dy;
             varX += dx * dx;
+            idx++;
+            if (idx == bufferLen) { idx = 0; }
         }
         candidateMeanX = meanX;
         candidateMeanY = meanY;
@@ -304,18 +320,23 @@ class GradeEstimatorView extends WatchUi.DataField {
 
     function completeCandidateRegression(samples as Array<Float>, bufIndex as Number, windowSize as Number, rawGrade as Float) {
         var xVals = regressionDistances;
+        var firstIndex = bufIndex - windowSize;
+        if (firstIndex < 0) { firstIndex += SAMPLE_WINDOW; }
+        var idx = firstIndex;
         var meanX = candidateMeanX;
         var meanY = candidateMeanY;
         var varX = candidateVarX;
         calculating = true;
         grade = rawGrade;
         var sse = 0.0;
+        idx = firstIndex;
         for (var i = 0; i < windowSize; i++) {
-            var idx = (bufIndex + SAMPLE_WINDOW - windowSize + i) % SAMPLE_WINDOW;
             var measAltDelta = samples[idx] - meanY;
             var AltDelta = grade * (xVals[i] - meanX);
             var res = (AltDelta - measAltDelta);
             sse += res*res;
+            idx++;
+            if (idx == SAMPLE_WINDOW) { idx = 0; }
         }
         if (varX > 0.0) {
             var sem = Math.sqrt((sse / (windowSize - 2)) / varX);
