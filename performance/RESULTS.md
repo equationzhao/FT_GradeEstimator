@@ -21,9 +21,9 @@ the benchmark, reference implementation, and control implementation.
 | 6 | Match buffer capacity to the maximum fit window | Default view allocation reduced by 672 bytes; fixed seven-sample allocation reduced by 1,256 bytes; timing changes within noise | Keep for memory savings; remove the redundant buffer-length setting |
 | 7 | Replace nested samples with two flat arrays | Default calculation 10.1% faster (9.2–10.6%); fixed 180-sample calculation 11.2% faster; allocation reduced by 656 bytes at the default window and 6,256 bytes at 180 samples | Keep |
 
-## Final comparison with the original personal edition
+## First-series comparison with the original personal edition
 
-The final production source is `badcd7e`, compared with `7d1987b`. The first
+The first series ended at production source `badcd7e`, compared with `7d1987b`. The first
 aggregate run had large rendering outliers; a repeat using the **same executable**
 confirmed all six workloads. Every scenario won all nine pairs in that repeat.
 The table reports the repeat; both runs are retained in `results/`.
@@ -69,3 +69,19 @@ Memory deltas around view creation and first drawing are shared-runtime
 observations, not peak-memory or whole-program measurements. Font caches trade
 a small amount of retained memory for less repeated measurement. Simulator
 performance does not establish physical-device battery savings.
+
+
+## Follow-up optimization rounds
+
+The follow-up series starts from `f634e28` (production source `badcd7e`). New
+workloads are defined in README.md; their A/A paired medians ranged from −0.42%
+to +1.29%, with no false improvements. The initial FIT fixture attempted duplicate
+native field registrations and failed before timing that scenario. The corrected
+fixture shares one real native field set between the two sequential writers.
+Ordinary regressions now include 27 tests. Frozen-reference checks cover 16,800
+samples: the previous 7,200 plus 9,600 adaptive, pause/resume and clamped-slope
+samples. Each retained round must pass both suites.
+
+| Round | Change | Result against preceding accepted source | Decision |
+| --- | --- | --- | --- |
+| 8 | Skip candidate selection for fixed windows | Fixed 180: 35.22% reduction (95% interval 34.49–36.03%); fixed 7: 31.52% (30.98–33.16%). Both 9/9 wins. Default calculation −0.66%; other workloads within the 5% threshold. | Keep |

@@ -172,26 +172,32 @@ class GradeEstimatorView extends WatchUi.DataField {
         }
 
 
-        // --- Adaptive window selection (new logic) ---
-        // Compute main grade with current window size
-        var mainGrade = computeWindowSlope(altitudes, sampleDistances, bufIndex, gradeWindowSize, SAMPLE_WINDOW);
-        // Compute min grade with window size minimum (if enough samples)
-        var minGrade = gradeWindowSize == MIN_GRADE_WINDOW ? mainGrade :
-            computeWindowSlope(altitudes, sampleDistances, bufIndex, MIN_GRADE_WINDOW, SAMPLE_WINDOW);
+        // Fixed windows need only the final regression and quality calculation.
+        if (MIN_GRADE_WINDOW != MAX_GRADE_WINDOW) {
+            // --- Adaptive window selection (new logic) ---
+            // Compute main grade with current window size
+            var mainGrade = computeWindowSlope(altitudes, sampleDistances, bufIndex, gradeWindowSize, SAMPLE_WINDOW);
+            // Compute min grade with window size minimum (if enough samples)
+            var minGrade = gradeWindowSize == MIN_GRADE_WINDOW ? mainGrade :
+                computeWindowSlope(altitudes, sampleDistances, bufIndex, MIN_GRADE_WINDOW, SAMPLE_WINDOW);
 
-        // Compare and adjust window size for next call
-        var gradeDiff = (mainGrade - minGrade).abs();
-        if (gradeDiff > 0.02)  { gradeWindowSize -= 3; }
-        else if (gradeDiff > 0.015) { gradeWindowSize -= 2; }
-        else if (gradeDiff > 0.0075)  { gradeWindowSize -= 1; }
-        else if (gradeDiff < 0.004 && gradeWindowSize <= MAX_GRADE_WINDOW / 2)
-                                    { gradeWindowSize += 1; }
-        else if (gradeDiff < 0.002){ gradeWindowSize += 1; }
+            // Compare and adjust window size for next call
+            var gradeDiff = (mainGrade - minGrade).abs();
+            if (gradeDiff > 0.02)  { gradeWindowSize -= 3; }
+            else if (gradeDiff > 0.015) { gradeWindowSize -= 2; }
+            else if (gradeDiff > 0.0075)  { gradeWindowSize -= 1; }
+            else if (gradeDiff < 0.004 && gradeWindowSize <= MAX_GRADE_WINDOW / 2)
+                                        { gradeWindowSize += 1; }
+            else if (gradeDiff < 0.002){ gradeWindowSize += 1; }
 
-        // Clamp window size between min and max, and not more than numValid
-        if (gradeWindowSize < MIN_GRADE_WINDOW) { gradeWindowSize = MIN_GRADE_WINDOW; }
-        if (gradeWindowSize > MAX_GRADE_WINDOW) { gradeWindowSize = MAX_GRADE_WINDOW; }
-        if (gradeWindowSize > numValid) { gradeWindowSize = numValid; }
+            // Clamp window size between min and max, and not more than numValid
+            if (gradeWindowSize < MIN_GRADE_WINDOW) { gradeWindowSize = MIN_GRADE_WINDOW; }
+            if (gradeWindowSize > MAX_GRADE_WINDOW) { gradeWindowSize = MAX_GRADE_WINDOW; }
+            if (gradeWindowSize > numValid) { gradeWindowSize = numValid; }
+
+        } else {
+            gradeWindowSize = MIN_GRADE_WINDOW;
+        }
 
         // Use the main grade window for regression and display
         computeLinearRegressionSlope(altitudes, sampleDistances, bufIndex, gradeWindowSize);
