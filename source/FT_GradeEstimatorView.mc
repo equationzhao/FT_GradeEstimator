@@ -43,15 +43,16 @@ class GradeEstimatorView extends WatchUi.DataField {
     var distSteep as Float     = 0.0;  // meters at ≥10%
     var maxGrade as Float      = 0.0;  // maximum grade encountered
     var lastSample as Float or Null = null;
+    var sampleSeconds as Float = 1.0;
     var vam as Float           = 0.0;  // VAM in m/h
     var vamAvg as Float        = 0.0;  // Average VAM in m/h
     var numValid               = 0;
     var lastMaxGradeUpdateTime as Number = 0; // Last time max grade was updated
     var sumAscentVam as Float   = 0.0; // Sum of ascenting VAM (+5%)
-    var samplesAscent as Number = 0; // Number of samples with ascenting VAM
+    var samplesAscent as Float = 0.0; // Seconds with ascending VAM
 
     var lap_average_grade_sum as Float = 0.0;
-    var lap_average_grade_count as Number = 0;
+    var lap_average_grade_count as Float = 0.0; // Recorded seconds
 
     var histogram; // Instance of Histogram to track grade distribution
 
@@ -576,7 +577,7 @@ class GradeEstimatorView extends WatchUi.DataField {
 
     function onTimerLap() as Void {
         lap_average_grade_sum = 0.0;
-        lap_average_grade_count = 0;
+        lap_average_grade_count = 0.0;
     }
 
     function onTimerReset() as Void {
@@ -589,7 +590,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         lastMaxGradeUpdateTime = 0;
         vamAvg = 0.0;
         sumAscentVam = 0.0;
-        samplesAscent = 0;
+        samplesAscent = 0.0;
         onTimerLap();
         writeRecordFields();
         writeLapFields();
@@ -700,6 +701,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         }
         lastSample = eTime;
         prevAltitude = altitude;
+        sampleSeconds = dt;
 
         // Update rolling window (altitude at [0], distance at [1])
         buffer[bufIndex] = [altitude, sample_distance]; // Replace oldest sample
@@ -745,7 +747,7 @@ class GradeEstimatorView extends WatchUi.DataField {
 
         computeVAM(grade, speed);
 
-        histogram.addData(grade * 100, quality);
+        histogram.addTimedData(grade * 100, quality, dt);
         if (histogram.shouldUpdate()) { histogram.compute(); }
 
         // Accumulate distance in each zone if above threshold and quality is good enough
@@ -757,8 +759,8 @@ class GradeEstimatorView extends WatchUi.DataField {
         }
 
         // Calculate average lap grade (time spent at grade)
-        lap_average_grade_sum += grade;
-        lap_average_grade_count++;
+        lap_average_grade_sum += grade * dt;
+        lap_average_grade_count += dt;
 
         // Write to FIT fields
         writeRecordFields();
@@ -856,8 +858,8 @@ class GradeEstimatorView extends WatchUi.DataField {
 
         if (shouldAccAvgVAM()) {
             // Accumulate VAM for ascenting segments
-            sumAscentVam += vam;
-            samplesAscent++;
+            sumAscentVam += vam * sampleSeconds;
+            samplesAscent += sampleSeconds;
 
             vamAvg = sumAscentVam / samplesAscent;
         }
@@ -1262,6 +1264,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         vam = 0.0;
         quality = 0.0;
         lastSample = null;
+        sampleSeconds = 1.0;
         if (histogram != null) { histogram.breakSequence(); }
         writeRecordFields();
         gradeWindowSize = MIN_GRADE_WINDOW; // Reset adaptive window size
