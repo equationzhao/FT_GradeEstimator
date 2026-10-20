@@ -51,6 +51,10 @@ class GradeEstimatorView extends WatchUi.DataField {
     var labelFonts = [0,0,0,0,0,0];
     var labelWidths = [0,0,0,0,0,0];
     var labelHeights = [0,0,0,0,0,0];
+    var valueTexts = [null,null,null,null,null,null,null];
+    var valueFonts = [0,0,0,0,0,0,0];
+    var valueWidths = [0,0,0,0,0,0,0];
+    var valueHeights = [0,0,0,0,0,0,0];
 
     function initialize() {
         DataField.initialize();
@@ -377,6 +381,17 @@ class GradeEstimatorView extends WatchUi.DataField {
         return labelFonts[cell];
     }
 
+    function valueFont(dc, text, width, height, cell) {
+        if (valueTexts[cell] == null || !valueTexts[cell].equals(text) ||
+            valueWidths[cell] != width || valueHeights[cell] != height) {
+            valueFonts[cell] = fitFont(dc,text,width,height,cell != 6);
+            valueTexts[cell] = text;
+            valueWidths[cell] = width;
+            valueHeights[cell] = height;
+        }
+        return valueFonts[cell];
+    }
+
     function drawCell(dc as Graphics.Dc, label as String, value as String, x as Number, y as Number, width as Number, height as Number, cell as Number) {
         var labelHeight = (height*0.34).toNumber();
         var valueHeight = height-labelHeight;
@@ -384,7 +399,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         dc.setClip(x,y,width,height);
         dc.drawText(center,y+labelHeight/2,labelFont(dc,label,width-2,labelHeight,cell),label,
             Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER);
-        dc.drawText(center,y+labelHeight+valueHeight/2,fitFont(dc,value,width-2,valueHeight,true),value,
+        dc.drawText(center,y+labelHeight+valueHeight/2,valueFont(dc,value,width-2,valueHeight,cell),value,
             Graphics.TEXT_JUSTIFY_CENTER|Graphics.TEXT_JUSTIFY_VCENTER);
         dc.clearClip();
     }
@@ -407,7 +422,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         if (statusHeight > 18) { statusHeight = 18; }
         var status = getStatusString();
         var fit = LOGGING_ENALBED ? "" : "FIT OFF";
-        var statusFont = fitFont(dc,status,width-55,statusHeight,false);
+        var statusFont = valueFont(dc,status,width-55,statusHeight,6);
         dc.drawText(2,statusHeight/2,statusFont,status,Graphics.TEXT_JUSTIFY_LEFT|Graphics.TEXT_JUSTIFY_VCENTER);
         dc.drawText(width-2,statusHeight/2,statusFont,fit,Graphics.TEXT_JUSTIFY_RIGHT|Graphics.TEXT_JUSTIFY_VCENTER);
         var rowHeight = (height-statusHeight)/2;

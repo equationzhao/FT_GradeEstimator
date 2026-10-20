@@ -43,6 +43,26 @@ function labelCacheInvalidation(logger as Test.Logger) as Boolean {
 }
 
 (:test)
+function valueCacheInvalidation(logger as Test.Logger) as Boolean {
+    var bitmap=Graphics.createBufferedBitmap({:width=>246,:height=>106,
+        :palette=>[Graphics.COLOR_BLACK,Graphics.COLOR_WHITE]}).get();
+    var dc=bitmap.getDc(); var view=originalView();
+    var values=["11111","88888","-30.0%","+0.0%","--","99999ft","1286m","STOPPED","FIT LOG ERR"];
+    for (var i=0;i<values.size();i++) {
+        for (var width=30;width<=90;width+=30) {
+            for (var height=10;height<=30;height+=10) {
+                for (var cell=0;cell<=6;cell+=6) {
+                    var expected=referenceFont(dc,values[i],width,height,cell!=6);
+                    if (view.valueFont(dc,values[i],width,height,cell)!=expected ||
+                        view.valueFont(dc,values[i],width,height,cell)!=expected) { return false; }
+                }
+            }
+        }
+    }
+    return true;
+}
+
+(:test)
 function wideLayoutFontsFit(logger as Test.Logger) as Boolean {
     var bitmap = Graphics.createBufferedBitmap({
         :width=>246, :height=>106,
