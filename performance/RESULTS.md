@@ -87,6 +87,7 @@ samples. Each retained round must pass both suites.
 | 8 | Skip candidate selection for fixed windows | Fixed 180: 35.22% reduction (95% interval 34.49–36.03%); fixed 7: 31.52% (30.98–33.16%). Both 9/9 wins. Default calculation −0.66%; other workloads within the 5% threshold. | Keep |
 | 9 | Reuse candidate statistics and scratch distances when the final window is unchanged | Default calculation: 31.95% reduction (30.17–33.68%); calculation + drawing: 16.81% (15.79–18.10%); precomputed inputs: 32.02% first run, 31.86% repeat. No meaningful gain or regression for the low-hit-rate adaptive workload or FIT workload. | Keep; +32 bytes observed during view setup |
 | 10 | Increment and wrap regression indices instead of repeated modulo | Fixed 180: 11.79% reduction (10.76–12.44%); fixed 7: 6.92% (5.34–17.20%), both 9/9 wins. Default calculation 2.61%, below the acceptance threshold. | Keep for fixed-window gains; no additional view storage |
+| 11 | Cache cell geometry and invalidate font caches once per layout change | Dynamic drawing 0.68% (0.00–2.58%), paused drawing 1.54%, imperial tall drawing 1.26%: none clears 5%. Construction + first draw **9.68% slower** (6.45–13.33% slowdown), all nine pairs slower; size/unit switching 3.83% slower. View allocation +216 bytes. | Reject and restore round 10, including the previous font-cache contract |
 
 Round 9's first extended run had cold-construction outliers (paired median −3.23%,
 interval −21.43–3.03%). Repeating the **same executable** produced 0.00% with an
@@ -102,3 +103,9 @@ confirmed gains: the 7–180 workload dropped from 6.46% to 4.75% on repeat; the
 precomputed 7–180 interval also crossed 5%. All original runs remain available.
 A simulator load stalled before producing test output and was restarted before
 the focused checks; this was an infrastructure interruption, not a test failure.
+
+Round 11 passed all 27 ordinary tests and 16,800 reference samples, but failed the
+performance gate. Its layout cache and supporting changes to internal cache tests
+were reverted. The independent first-draw, layout-switch and unit-change regression
+added with the benchmark remains. No formatting cache or partial-redraw pipeline
+was introduced.
