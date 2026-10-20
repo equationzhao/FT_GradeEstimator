@@ -586,11 +586,18 @@ class GradeEstimatorView extends WatchUi.DataField {
     function onTimerReset() as Void {
         initializeFields();
         initializeGradeHistogram();
-
         _resetAll();
-        grade      = 0.0;
-        distLight  = 0.0;
-        distSteep  = 0.0;
+        distLight = 0.0;
+        distSteep = 0.0;
+        maxGrade = 0.0;
+        lastMaxGradeUpdateTime = 0;
+        vamAvg = 0.0;
+        sumAscentVam = 0.0;
+        samplesAscent = 0;
+        onTimerLap();
+        writeRecordFields();
+        writeLapFields();
+        writeSessionFields();
     }
 
     function handleTap(clickEvent as WatchUi.ClickEvent) as Boolean {
