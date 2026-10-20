@@ -42,7 +42,7 @@ class GradeEstimatorView extends WatchUi.DataField {
     var distLight as Float     = 0.0;  // meters at ≥5%
     var distSteep as Float     = 0.0;  // meters at ≥10%
     var maxGrade as Float      = 0.0;  // maximum grade encountered
-    var lastSample as Float    = 0.0;
+    var lastSample as Float or Null = null;
     var vam as Float           = 0.0;  // VAM in m/h
     var vamAvg as Float        = 0.0;  // Average VAM in m/h
     var numValid               = 0;
@@ -666,29 +666,31 @@ class GradeEstimatorView extends WatchUi.DataField {
     function compute(info as Activity.Info) as Number {
         var speed    = (info has :currentSpeed) ? info.currentSpeed : null;
         var altitude = (info has :altitude) ? info.altitude : null;
-        var eTime = (info has :elapsedTime) ? info.elapsedTime / 1000.0 : 0.0; 
-
-        if (speed == null || altitude == null || !(eTime instanceof Float)) { return 0; }
-
+        var elapsed = (info has :elapsedTime) ? info.elapsedTime : null;
+        if (speed == null || altitude == null || elapsed == null ||
+            speed <= 0.0) {
+            _resetAll();
+            return 0;
+        }
+        var eTime = elapsed / 1000.0;
+        if (lastSample == null) {
+            lastSample = eTime;
+            prevAltitude = altitude;
+            return 0;
+        }
         var dt = eTime - lastSample;
-        var sample_distance = speed * dt; // expect one second sample interval
-
-        // Reset if nearly stopped, if more than 5 samples missed or if timer is not running
-        if (sample_distance < 0.1 || dt > 5) {
+        // A duplicate timestamp contributes neither distance nor duration.
+        if (dt == 0.0) { return 0; }
+        var sample_distance = speed * dt;
+        if (sample_distance < 0.1 || dt < 0.0 || dt > 5.0 ||
+            (prevAltitude != null && (altitude - prevAltitude).abs() > 10.0)) {
             _resetAll();
             lastSample = eTime;
+            prevAltitude = altitude;
             return 0;
         }
-
         lastSample = eTime;
-
-        if (prevAltitude != null && (altitude - prevAltitude).abs() > 10) {
-            // If the altitude jumped too much, reset the buffer
-            //if (DEBUG) { System.println("AdaptiveGrade.compute() altitude jump detected: " + (altitude - prevAltitude).abs().format("%.1f") + " m, resetting buffer."); }
-            _resetAll();
-            lastSample = eTime;
-            return 0;
-        }
+        prevAltitude = altitude;
 
         // Update rolling window (altitude at [0], distance at [1])
         buffer[bufIndex] = [altitude, sample_distance]; // Replace oldest sample
@@ -901,7 +903,8 @@ class GradeEstimatorView extends WatchUi.DataField {
             else { value_curr_grade.setColor(color_black); }
 
             var print_grade = 100*grade;
-            if (print_grade.abs() < 0.05) { value_curr_grade.setText("0.0" + grade_suffix); }
+            if (!calculating) { value_curr_grade.setText("--"); }
+            else if (print_grade.abs() < 0.05) { value_curr_grade.setText("0.0" + grade_suffix); }
             else { value_curr_grade.setText(print_grade.format(str_format) + grade_suffix); }
         }
 
@@ -1245,8 +1248,14 @@ class GradeEstimatorView extends WatchUi.DataField {
             buffer[i] = [-1000.0, 0.0]; 
         }
         calculating = false;
+        numValid = 0;
+        grade = 0.0;
+        vam = 0.0;
+        quality = 0.0;
+        lastSample = null;
+        if (histogram != null) { histogram.breakSequence(); }
+        writeRecordFields();
         gradeWindowSize = MIN_GRADE_WINDOW; // Reset adaptive window size
         prevAltitude = null; // Reset previous median altitude
-        if (histogram != null) { histogram.breakSequence(); }
     }
 }
