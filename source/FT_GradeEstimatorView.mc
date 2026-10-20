@@ -19,7 +19,8 @@ class GradeEstimatorView extends WatchUi.DataField {
     const MAX_ALLOWED_GRADE = 0.3;
     const DISTANCE_FIELD_CAPACITY = 32;
 
-    var buffer as Array<Array<Float>> = [];
+    var altitudes as Array<Float> = [];
+    var sampleDistances as Array<Float> = [];
     var regressionDistances as Array<Float> = [];
     var bufIndex = 0;
     var numValid = 0;
@@ -83,8 +84,11 @@ class GradeEstimatorView extends WatchUi.DataField {
         THRESHOLD_STEEP = clamp(readNumber("threshold_steep",8.0),THRESHOLD_LIGHT*100.0,30.0) / 100.0;
         lightLabel = "Climb " + (THRESHOLD_LIGHT*100).format("%.1f") + "%+";
         steepLabel = "Hard " + (THRESHOLD_STEEP*100).format("%.1f") + "%+";
-        buffer = [];
-        for (var i=0; i<SAMPLE_WINDOW; i++) { buffer.add([0.0,0.0]); }
+        altitudes = [];
+        sampleDistances = [];
+        for (var i=0; i<SAMPLE_WINDOW; i++) {
+            altitudes.add(0.0); sampleDistances.add(0.0);
+        }
         regressionDistances = [];
         for (var i=0; i<MAX_GRADE_WINDOW; i++) { regressionDistances.add(0.0); }
         initializeFields();
@@ -158,8 +162,8 @@ class GradeEstimatorView extends WatchUi.DataField {
         prevAltitude = altitude;
 
         // Reuse each sample slot and track validity without scanning the buffer.
-        buffer[bufIndex][0] = altitude;
-        buffer[bufIndex][1] = sample_distance;
+        altitudes[bufIndex] = altitude;
+        sampleDistances[bufIndex] = sample_distance;
         bufIndex = (bufIndex + 1) % SAMPLE_WINDOW;
         if (numValid < SAMPLE_WINDOW) { numValid++; }
 
@@ -170,10 +174,10 @@ class GradeEstimatorView extends WatchUi.DataField {
 
         // --- Adaptive window selection (new logic) ---
         // Compute main grade with current window size
-        var mainGrade = computeWindowSlope(buffer, bufIndex, gradeWindowSize, SAMPLE_WINDOW);
+        var mainGrade = computeWindowSlope(altitudes, sampleDistances, bufIndex, gradeWindowSize, SAMPLE_WINDOW);
         // Compute min grade with window size minimum (if enough samples)
         var minGrade = gradeWindowSize == MIN_GRADE_WINDOW ? mainGrade :
-            computeWindowSlope(buffer, bufIndex, MIN_GRADE_WINDOW, SAMPLE_WINDOW);
+            computeWindowSlope(altitudes, sampleDistances, bufIndex, MIN_GRADE_WINDOW, SAMPLE_WINDOW);
 
         // Compare and adjust window size for next call
         var gradeDiff = (mainGrade - minGrade).abs();
@@ -190,7 +194,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         if (gradeWindowSize > numValid) { gradeWindowSize = numValid; }
 
         // Use the main grade window for regression and display
-        computeLinearRegressionSlope(buffer, bufIndex, gradeWindowSize);
+        computeLinearRegressionSlope(altitudes, sampleDistances, bufIndex, gradeWindowSize);
         if (grade > MAX_ALLOWED_GRADE) { grade = MAX_ALLOWED_GRADE;}
         else if (grade < -MAX_ALLOWED_GRADE) { grade = -MAX_ALLOWED_GRADE; }
 
@@ -210,7 +214,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         return 1;
     }
 
-    function computeLinearRegressionSlope(samples as Array<Array<Float>>, bufIndex as Number, windowSize as Number) {
+    function computeLinearRegressionSlope(samples as Array<Float>, distances as Array<Float>, bufIndex as Number, windowSize as Number) {
         var xVals = regressionDistances;
         var dist = 0.0;
         var sumX = 0.0, sumY = 0.0;
@@ -219,9 +223,9 @@ class GradeEstimatorView extends WatchUi.DataField {
         // Use only the last windowSize samples
         for (var i = 0; i < windowSize; i++) {
             var idx = (bufIndex + SAMPLE_WINDOW - windowSize + i) % SAMPLE_WINDOW;
-            dist += samples[idx][1];
+            dist += distances[idx];
             xVals[i] = dist;
-            sumY += samples[idx][0];
+            sumY += samples[idx];
             sumX += xVals[i];
         }
         var meanX = sumX / windowSize;
@@ -231,7 +235,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         for (var i = 0; i < windowSize; i++) {
             var idx = (bufIndex + SAMPLE_WINDOW - windowSize + i) % SAMPLE_WINDOW;
             var dx = xVals[i] - meanX;
-            var dy = samples[idx][0] - meanY;
+            var dy = samples[idx] - meanY;
             covXY += dx * dy;
             varX += dx * dx;
         }
@@ -240,7 +244,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         var sse = 0.0;
         for (var i = 0; i < windowSize; i++) {
             var idx = (bufIndex + SAMPLE_WINDOW - windowSize + i) % SAMPLE_WINDOW;
-            var measAltDelta = samples[idx][0] - meanY;
+            var measAltDelta = samples[idx] - meanY;
             var AltDelta = grade * (xVals[i] - meanX);
             var res = (AltDelta - measAltDelta);
 
@@ -257,15 +261,15 @@ class GradeEstimatorView extends WatchUi.DataField {
         }
     }
 
-    function computeWindowSlope(samples as Array<Array<Float>>, bufIndex as Number, windowSize as Number, bufferLen as Number) as Float {
+    function computeWindowSlope(samples as Array<Float>, distances as Array<Float>, bufIndex as Number, windowSize as Number, bufferLen as Number) as Float {
         var xVals = regressionDistances;
         var dist = 0.0;
         var sumX = 0.0, sumY = 0.0;
         for (var i = 0; i < windowSize; i++) {
             var idx = (bufIndex + bufferLen - windowSize + i) % bufferLen;
-            dist += samples[idx][1];
+            dist += distances[idx];
             xVals[i] = dist;
-            sumY += samples[idx][0];
+            sumY += samples[idx];
             sumX += xVals[i];
         }
         var meanX = sumX / windowSize;
@@ -274,7 +278,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         for (var i = 0; i < windowSize; i++) {
             var idx = (bufIndex + bufferLen - windowSize + i) % bufferLen;
             var dx = xVals[i] - meanX;
-            var dy = samples[idx][0] - meanY;
+            var dy = samples[idx] - meanY;
             covXY += dx * dy;
             varX += dx * dx;
         }

@@ -230,8 +230,8 @@ function bug08BufferLimitBypass(logger as Test.Logger) as Boolean {
     var v=originalView();
     Application.Properties.setValue("buffer_fit_max",200);
     v.updateSettings();
-    logger.debug("BUG08 maxWindow=200: SAMPLE_WINDOW="+v.SAMPLE_WINDOW.toString()+"; actual buffer="+v.buffer.size().toString()+"; documented ceiling=180");
-    var ok=v.SAMPLE_WINDOW<=180 && v.buffer.size()<=180;
+    logger.debug("BUG08 maxWindow=200: SAMPLE_WINDOW="+v.SAMPLE_WINDOW.toString()+"; actual buffer="+v.altitudes.size().toString()+"; documented ceiling=180");
+    var ok=v.SAMPLE_WINDOW<=180 && v.altitudes.size()<=180;
     restoreTestProperties();
     return ok;
 }
@@ -359,7 +359,7 @@ function settingsStayBounded(logger as Test.Logger) as Boolean {
     Application.Properties.setValue("buffer_fit_max",-10); Application.Properties.setValue("threshold_log_max",2);
     Application.Properties.setValue("threshold_log_dist",-1);
     v.updateSettings();
-    var ok=v.buffer.size()==180 && v.regressionDistances.size()==180 && v.MIN_GRADE_WINDOW==180 &&
+    var ok=v.altitudes.size()==180 && v.regressionDistances.size()==180 && v.MIN_GRADE_WINDOW==180 &&
         v.MAX_GRADE_WINDOW==180 && v.MAX_LOG_QUALITY==1.0 && v.DIST_LOG_QUALITY==0.0;
     restoreTestProperties(); return ok;
 }
@@ -376,9 +376,9 @@ function flatAndNegativeAltitudeRemainValid(logger as Test.Logger) as Boolean {
 
 (:test)
 function regressionQualityGateAndBufferReuse(logger as Test.Logger) as Boolean {
-    var v=originalView(); var slot=v.buffer[0]; var scratch=v.regressionDistances;
+    var v=originalView(); var slots=v.altitudes; var distances=v.sampleDistances; var scratch=v.regressionDistances;
     warmClimb(v);
-    if (v.buffer[0]!=slot || v.regressionDistances!=scratch) { return false; }
+    if (v.altitudes!=slots || v.sampleDistances!=distances || v.regressionDistances!=scratch) { return false; }
     v.quality=0.0; v.grade=0.2;
     return !v.shouldAccLightDist() && !v.shouldAccSteepDist() && !v.shouldCalcMaxGrade();
 }
@@ -417,6 +417,6 @@ function twoHourRideRemainsStable(logger as Test.Logger) as Boolean {
     var v=originalView();
     for (var t=1; t<=7200; t++) { v.compute(sample(t,3.0,100.0+0.3*t,Activity.TIMER_STATE_ON)); }
     logger.debug("2h grade="+v.grade.toString()+" distance="+v.distLight.toString());
-    return v.calculating && (v.grade-0.1).abs()<0.001 && v.buffer.size()==v.MAX_GRADE_WINDOW &&
+    return v.calculating && (v.grade-0.1).abs()<0.001 && v.altitudes.size()==v.MAX_GRADE_WINDOW && v.sampleDistances.size()==v.MAX_GRADE_WINDOW &&
         v.regressionDistances.size()==20 && v.distLight>21000.0;
 }

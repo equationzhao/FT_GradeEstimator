@@ -22,6 +22,8 @@ the benchmark, reference implementation, and control implementation.
 
 | 6 | Match buffer capacity to the maximum fit window | Default view allocation reduced by 672 bytes; fixed seven-sample allocation reduced by 1,256 bytes; timing changes within noise | Keep for memory savings; remove the redundant buffer-length setting |
 
+| 7 | Replace nested samples with two flat arrays | Default calculation 10.1% faster (9.2–10.6%); fixed 180-sample calculation 11.2% faster; allocation reduced by 656 bytes at the default window and 6,256 bytes at 180 samples | Keep |
+
 ## Reproducibility and limits
 
 See [the benchmark method](README.md) and the raw paired timings in `results/`.

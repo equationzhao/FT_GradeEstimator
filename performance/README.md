@@ -19,6 +19,11 @@ monkeydo "$PWD/bin/Performance.prg" edge540 -t
 Start the simulator before running these commands. Require the complete all-pass
 summary, rather than relying on the runner's exit status.
 
+The benchmark-only legacy property resource lets historical controls read
+`buffer_length`. Production settings no longer expose that redundant option.
+Garmin requires keys to be declared before calling
+[`Properties.getValue()`](https://developer.garmin.com/connect-iq/api-docs/Toybox/Application/Properties.html).
+
 ## Method
 
 - Run identical control and candidate source first to estimate A/A noise.
