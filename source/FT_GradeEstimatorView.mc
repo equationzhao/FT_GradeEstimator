@@ -209,6 +209,7 @@ class GradeEstimatorView extends WatchUi.DataField {
     function computeLinearRegressionSlope(samples as Array<Array<Float>>, bufIndex as Number, windowSize as Number) {
         var xVals = regressionDistances;
         var dist = 0.0;
+        var sumX = 0.0, sumY = 0.0;
         calculating = true;
 
         // Use only the last windowSize samples
@@ -216,11 +217,6 @@ class GradeEstimatorView extends WatchUi.DataField {
             var idx = (bufIndex + SAMPLE_WINDOW - windowSize + i) % SAMPLE_WINDOW;
             dist += samples[idx][1];
             xVals[i] = dist;
-        }
-
-        var sumX = 0.0, sumY = 0.0;
-        for (var i = 0; i < windowSize; i++) {
-            var idx = (bufIndex + SAMPLE_WINDOW - windowSize + i) % SAMPLE_WINDOW;
             sumY += samples[idx][0];
             sumX += xVals[i];
         }
@@ -260,14 +256,11 @@ class GradeEstimatorView extends WatchUi.DataField {
     function computeWindowSlope(samples as Array<Array<Float>>, bufIndex as Number, windowSize as Number, bufferLen as Number) as Float {
         var xVals = regressionDistances;
         var dist = 0.0;
+        var sumX = 0.0, sumY = 0.0;
         for (var i = 0; i < windowSize; i++) {
             var idx = (bufIndex + bufferLen - windowSize + i) % bufferLen;
             dist += samples[idx][1];
             xVals[i] = dist;
-        }
-        var sumX = 0.0, sumY = 0.0;
-        for (var i = 0; i < windowSize; i++) {
-            var idx = (bufIndex + bufferLen - windowSize + i) % bufferLen;
             sumY += samples[idx][0];
             sumX += xVals[i];
         }
