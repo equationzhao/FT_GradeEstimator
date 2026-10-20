@@ -39,7 +39,8 @@ summary, rather than relying on the runner's exit status.
   candidate with another run when noise or regressions make the result unclear.
   Initial A/A runs showed up to 3.5% median variation and large cold-drawing
   outliers, so the threshold is 5% and the first drawing scenario receives
-  5,000 extra warm-up iterations per implementation.
+  at least 30 seconds of alternating drawing warm-up. Fixed iteration warm-up
+  still left large paused-page outliers in round 2; repeat suspect measurements.
 - Memory-only improvements may be accepted when storage is deterministically
   reduced, allocation measurements confirm the reduction, and timing does not
   show a clear regression. Memory readings around construction and first drawing

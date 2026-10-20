@@ -169,7 +169,8 @@ class GradeEstimatorView extends WatchUi.DataField {
         // Compute main grade with current window size
         var mainGrade = computeWindowSlope(buffer, bufIndex, gradeWindowSize, SAMPLE_WINDOW);
         // Compute min grade with window size minimum (if enough samples)
-        var minGrade = computeWindowSlope(buffer, bufIndex, MIN_GRADE_WINDOW, SAMPLE_WINDOW);
+        var minGrade = gradeWindowSize == MIN_GRADE_WINDOW ? mainGrade :
+            computeWindowSlope(buffer, bufIndex, MIN_GRADE_WINDOW, SAMPLE_WINDOW);
 
         // Compare and adjust window size for next call
         var gradeDiff = (mainGrade - minGrade).abs();

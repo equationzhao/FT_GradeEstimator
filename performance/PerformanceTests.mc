@@ -76,8 +76,11 @@ function performanceAB(logger as Test.Logger) as Boolean {
         // A newly loaded program exhibits several seconds of cold simulator
         // overhead. Warm both drawing paths before collecting the first pair.
         if (mode==0) {
-            performanceBatch(a,dc,mode,5000);
-            performanceBatch(b,dc,mode,5000);
+            var warmUntil=System.getTimer()+30000;
+            while (System.getTimer()<warmUntil) {
+                performanceBatch(a,dc,mode,500);
+                performanceBatch(b,dc,mode,500);
+            }
         }
         performanceBatch(a,dc,mode,80); performanceBatch(b,dc,mode,80);
         for (var pair=0;pair<9;pair++) {
@@ -100,13 +103,16 @@ function performanceAB(logger as Test.Logger) as Boolean {
 
 (:test)
 function referenceSampleParity(logger as Test.Logger) as Boolean {
-    for (var config=0;config<3;config++) {
+    for (var config=0;config<4;config++) {
         restoreTestProperties();
         if (config==1) {
             Application.Properties.setValue("buffer_fit_min",3);
             Application.Properties.setValue("buffer_fit_max",3);
         } else if (config==2) {
             Application.Properties.setValue("buffer_fit_min",7);
+            Application.Properties.setValue("buffer_fit_max",180);
+        } else if (config==3) {
+            Application.Properties.setValue("buffer_fit_min",180);
             Application.Properties.setValue("buffer_fit_max",180);
         }
         var expected=new ReferenceView(); var actual=new GradeEstimatorView();
@@ -120,6 +126,10 @@ function referenceSampleParity(logger as Test.Logger) as Boolean {
             info.altitude=i%149==0 ? null : altitude;
             info.elapsedTime=elapsed; info.totalAscent=i/3;
             info.timerState=i%173<4 ? Activity.TIMER_STATE_PAUSED : Activity.TIMER_STATE_ON;
+            if (config==3 && i<500) {
+                info.currentSpeed=3.0; info.altitude=altitude;
+                info.elapsedTime=i*1000; info.timerState=Activity.TIMER_STATE_ON;
+            }
             if (i%601==0) { expected.onTimerReset(); actual.onTimerReset(); }
             expected.compute(info); actual.compute(info);
             if (expected.grade!=actual.grade || expected.quality!=actual.quality ||
