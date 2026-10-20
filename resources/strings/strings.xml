@@ -1,74 +1,23 @@
 <strings>
-    <string id="AppName">Adaptive Grade Plus</string>
-    <string id="Version">v3.1</string>
-
-    <!-- UI labels -->
-    <string id="UI_Label_Gradient_Max">Max Grade</string>
-    <string id="UI_Label_Grade_Held">Max grade held</string>
-    <string id="UI_Label_Time_10s">10s</string>
-    <string id="UI_Label_Time_30min">30min</string>
-    <string id="UI_Label_Climb_Light">Light</string>
-    <string id="UI_Label_Climb_Hard">Hard</string>
-    <string id="UI_Label_Distance_Climb">Climbing distance</string>
-    <string id="UI_Label_Distance_Climb_Short">Climb dist.</string>
-    <string id="UI_Label_VAM_Current">Curr. VAM</string>
-    <string id="UI_Label_VAM_Average">Avg. VAM</string>
-
-    <string id="UI_Label_Status_Buffering">BUFFERING</string>
-    <string id="UI_Label_Status_Active">ACTIVE</string>
-    <string id="UI_Label_Status_NoData">NO DATA</string>
-    <string id="UI_Label_Status_FieldError">FIT LOG ERR</string>
-    <string id="UI_Label_Status_LoggingDisabled">LOGGING DISABLED</string>
-
-    <string id="UI_Label_Graph_NoData">No data to display</string>
-
-    <!-- Garmin Connect data labels -->
-    <string id="GC_ChartTitle_Grade">Grade</string>
-
-    <string id="GC_Lap_AvgGrade">Lap Avg. Grade</string>
-
-    <string id="GC_Label_Grade">Grade</string>
-    <string id="GC_ClimbDist">Climb dist. light/hard</string>
-    <string id="GC_MaxGrdTime">Max grade held for 10s/1m/30m</string>
-    
-    <!-- General Labels -->
-    <string id="Unit_Grade">%</string>
-    <string id="Unit_Distance">km</string>
-    <string id="Unit_Distance_Mixed"></string>
-
-    <!-- Settings -->
-    <string id="enable_logging">Enable FIT Logging</string>
-    <string id="enable_grade_logging">Log Gradient Data</string>
-
-    <string id="buffer_length">Sample Buffer Size (seconds)</string>
-    <string id="buffer_fit_max">Max Samples for Grade Fit</string>
-    <string id="buffer_fit_min">Min Samples for Grade Fit (≥3)</string>
-    <string id="threshold_log_dist">Climbing Distance (0.0-1.0)</string>
-    <string id="threshold_log_max">Max Grade (0.0-1.0)</string>
-    <string id="threshold_light">“Light” Climb Threshold (%)</string>
-    <string id="threshold_steep">“Hard” Climb Threshold (%)</string>
-    <string id="small_field_data">Small Layout Data Display</string>
-    <string id="small_field_data_vam">VAM</string>
-    <string id="small_field_data_dist">Climbing Distances</string>
-    <string id="small_field_data_climbmax">Climb Distance and Max Gradient</string>
-    <string id="small_field_data_climbvam">Climb Distance and VAM</string>
-
-    <string id="graphmode">Graph Display Mode</string>
-    <string id="graphmode_both">Altitude + Histogram</string>
-    <string id="graphmode_buffer">Altitude Buffer</string>
-    <string id="graphmode_histogram">Histogram Stats</string>
-
-    <string id="group_title_buffer">Sample Buffer Settings</string>
-    <string id="group_desc_buffer">Adjust altitude buffer size and fit sample count.</string>
-
-    <string id="group_title_log">Linear Fit Quality Thresholds</string>
-    <string id="group_desc_log">Minimum linear fit quality to log values.</string>
-
-    <string id="group_title_climb">Climbing Classification Gradients</string>
-    <string id="group_desc_climb">Set light/hard climb grades; light grade is VAM threshold.</string>
-
-    <string id="group_title_misc">Other Settings</string>
-    <string id="group_desc_misc"></string>
-
-    <string id="simple_mode">Display Large Grade Number</string>
+  <string id="AppName">Grade 540 Personal</string>
+  <string id="GC_ChartTitle_Grade">Grade</string>
+  <string id="GC_Label_Grade">Grade</string>
+  <string id="GC_ClimbDist">Climb dist. light/hard</string>
+  <string id="Unit_Grade">%</string>
+  <string id="Unit_Distance_Mixed" />
+  <string id="enable_logging">Enable FIT Logging</string>
+  <string id="enable_grade_logging">Log Gradient Data</string>
+  <string id="buffer_length">Sample Buffer Size (samples)</string>
+  <string id="buffer_fit_max">Max Samples for Grade Fit</string>
+  <string id="buffer_fit_min">Min Samples for Grade Fit (≥3)</string>
+  <string id="threshold_log_dist">Climbing Distance (0.0-1.0)</string>
+  <string id="threshold_log_max">Max Grade (0.0-1.0)</string>
+  <string id="threshold_light">“Light” Climb Threshold (%)</string>
+  <string id="threshold_steep">“Hard” Climb Threshold (%)</string>
+  <string id="group_title_buffer">Sample Buffer Settings</string>
+  <string id="group_desc_buffer">Adjust altitude buffer size and fit sample count.</string>
+  <string id="group_title_log">Linear Fit Quality Thresholds</string>
+  <string id="group_desc_log">Minimum linear fit quality to log values.</string>
+  <string id="group_title_climb">Climbing Classification Gradients</string>
+  <string id="group_desc_climb">Set the grade thresholds for light and hard climbing distances.</string>
 </strings>

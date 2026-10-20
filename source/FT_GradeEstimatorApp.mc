@@ -1,52 +1,19 @@
 import Toybox.Application;
-import Toybox.Lang;
 import Toybox.WatchUi;
 
 class GradeEstimatorApp extends Application.AppBase {
-
     var view as GradeEstimatorView or Null;
 
-    function initialize() {
-        AppBase.initialize();
-    }
-
-    // onStart() is called on application start up
-    function onStart(state as Dictionary?) as Void {
-    }
-
-    // onStop() is called when your application is exiting
-    function onStop(state as Dictionary?) as Void {
-    }
+    function initialize() { AppBase.initialize(); }
 
     function onSettingsChanged() as Void {
         AppBase.onSettingsChanged();
-
-        view.updateSettings();
+        if (view != null) { view.updateSettings(); }
+        WatchUi.requestUpdate();
     }
 
-    // Return the initial view of your application here
-    function getInitialView()  {
+    function getInitialView() {
         view = new GradeEstimatorView();
-
-        var inputDelegate = new GradeEstimatorInputDelegate(view);
-
-        return [ view, inputDelegate ];
+        return [view];
     }
-}
-
-class GradeEstimatorInputDelegate extends WatchUi.InputDelegate {
-    hidden var dataField as GradeEstimatorView;
-
-    function initialize(field as GradeEstimatorView) {
-        InputDelegate.initialize();
-        dataField = field;
-    }
-
-    function onTap(clickEvent as WatchUi.ClickEvent) as Boolean {
-        return dataField.handleTap(clickEvent);
-    }
-}
-
-function getApp() as GradeEstimatorApp {
-    return Application.getApp() as GradeEstimatorApp;
 }
