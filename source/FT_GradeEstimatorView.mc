@@ -22,6 +22,11 @@ class GradeEstimatorView extends WatchUi.DataField {
     var altitudes as Array<Float> = [];
     var sampleDistances as Array<Float> = [];
     var regressionDistances as Array<Float> = [];
+    // Statistics for the most recent candidate window. The scratch distances
+    // belong to the same candidate and are consumed before another slope call.
+    var candidateMeanX = 0.0;
+    var candidateMeanY = 0.0;
+    var candidateVarX = 0.0;
     var bufIndex = 0;
     var numValid = 0;
     var gradeWindowSize = 7;
@@ -174,12 +179,11 @@ class GradeEstimatorView extends WatchUi.DataField {
 
         // Fixed windows need only the final regression and quality calculation.
         if (MIN_GRADE_WINDOW != MAX_GRADE_WINDOW) {
-            // --- Adaptive window selection (new logic) ---
-            // Compute main grade with current window size
-            var mainGrade = computeWindowSlope(altitudes, sampleDistances, bufIndex, gradeWindowSize, SAMPLE_WINDOW);
-            // Compute min grade with window size minimum (if enough samples)
-            var minGrade = gradeWindowSize == MIN_GRADE_WINDOW ? mainGrade :
-                computeWindowSlope(altitudes, sampleDistances, bufIndex, MIN_GRADE_WINDOW, SAMPLE_WINDOW);
+            var oldWindow = gradeWindowSize;
+            // Evaluate the old window last so its scratch distances survive.
+            var minGrade = computeWindowSlope(altitudes, sampleDistances, bufIndex, MIN_GRADE_WINDOW, SAMPLE_WINDOW);
+            var mainGrade = oldWindow == MIN_GRADE_WINDOW ? minGrade :
+                computeWindowSlope(altitudes, sampleDistances, bufIndex, oldWindow, SAMPLE_WINDOW);
 
             // Compare and adjust window size for next call
             var gradeDiff = (mainGrade - minGrade).abs();
@@ -195,12 +199,16 @@ class GradeEstimatorView extends WatchUi.DataField {
             if (gradeWindowSize > MAX_GRADE_WINDOW) { gradeWindowSize = MAX_GRADE_WINDOW; }
             if (gradeWindowSize > numValid) { gradeWindowSize = numValid; }
 
+            if (gradeWindowSize == oldWindow) {
+                completeCandidateRegression(altitudes, bufIndex, gradeWindowSize, mainGrade);
+            } else {
+                computeLinearRegressionSlope(altitudes, sampleDistances, bufIndex, gradeWindowSize);
+            }
         } else {
             gradeWindowSize = MIN_GRADE_WINDOW;
+            computeLinearRegressionSlope(altitudes, sampleDistances, bufIndex, gradeWindowSize);
         }
 
-        // Use the main grade window for regression and display
-        computeLinearRegressionSlope(altitudes, sampleDistances, bufIndex, gradeWindowSize);
         if (grade > MAX_ALLOWED_GRADE) { grade = MAX_ALLOWED_GRADE;}
         else if (grade < -MAX_ALLOWED_GRADE) { grade = -MAX_ALLOWED_GRADE; }
 
@@ -288,7 +296,34 @@ class GradeEstimatorView extends WatchUi.DataField {
             covXY += dx * dy;
             varX += dx * dx;
         }
+        candidateMeanX = meanX;
+        candidateMeanY = meanY;
+        candidateVarX = varX;
         return (varX > 0.0) ? (covXY / varX) : 0.0;
+    }
+
+    function completeCandidateRegression(samples as Array<Float>, bufIndex as Number, windowSize as Number, rawGrade as Float) {
+        var xVals = regressionDistances;
+        var meanX = candidateMeanX;
+        var meanY = candidateMeanY;
+        var varX = candidateVarX;
+        calculating = true;
+        grade = rawGrade;
+        var sse = 0.0;
+        for (var i = 0; i < windowSize; i++) {
+            var idx = (bufIndex + SAMPLE_WINDOW - windowSize + i) % SAMPLE_WINDOW;
+            var measAltDelta = samples[idx] - meanY;
+            var AltDelta = grade * (xVals[i] - meanX);
+            var res = (AltDelta - measAltDelta);
+            sse += res*res;
+        }
+        if (varX > 0.0) {
+            var sem = Math.sqrt((sse / (windowSize - 2)) / varX);
+            quality = 0.005 / (0.005 + sem);
+        } else {
+            quality = 0.0;
+            calculating = false;
+        }
     }
 
     hidden function _resetAll() as Void {
