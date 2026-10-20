@@ -1,0 +1,7 @@
+{
+  "decision": "rejected before timing",
+  "reason": "Float.format with literal prefixes or units raised Invalid Value: Unexpected input to format",
+  "passed": 21,
+  "failed": 0,
+  "errors": 7
+}

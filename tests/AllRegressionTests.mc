@@ -6,6 +6,53 @@ import Toybox.FitContributor;
 import Toybox.System;
 import Toybox.Graphics;
 
+class RecordingDisplayView extends GradeEstimatorView {
+    var renderedValues=["","","","","",""];
+    function initialize() { GradeEstimatorView.initialize(); }
+    function drawCell(dc,label,value,x,y,width,height,cell) {
+        renderedValues[cell]=value;
+        GradeEstimatorView.drawCell(dc,label,value,x,y,width,height,cell);
+    }
+}
+
+(:test)
+function displayFormattingMatchesNative(logger as Test.Logger) as Boolean {
+    restoreTestProperties(); var view=new RecordingDisplayView();
+    var bitmap=Graphics.createBufferedBitmap({:width=>246,:height=>106,
+        :palette=>[Graphics.COLOR_BLACK,Graphics.COLOR_WHITE]}).get();
+    var dc=bitmap.getDc();
+    var cases=[-0.0,0.0,-0.0005,0.0005,0.034999,0.035,0.035001,0.079999,0.08,0.080001,0.3,-0.3];
+    var distances=[0.0,999.4,999.5,999.99,1000.0,99949.0,99950.0,99960.0,1609.344,100000.0,12310.0,12320.0];
+    view.onUpdate(dc);
+    for (var unit=0;unit<2;unit++) {
+        view.isMetric=unit==0;
+        for (var i=0;i<cases.size();i++) {
+            view.calculating=true; view.timerState=Activity.TIMER_STATE_ON;
+            view.grade=cases[i]; view.maxGrade=cases[i].abs();
+            view.vam=cases[i]*10800.0; view.distLight=distances[i]; view.distSteep=distances[i];
+            view.totalAscent=i; view.quality=0.995;
+            for (var repeat=0;repeat<2;repeat++) {
+                view.onUpdate(dc);
+                var ascent=(view.isMetric ? i.toFloat() : i*3.28084).format("%.0f")+(view.isMetric ? "m" : "ft");
+                if (!view.renderedValues[0].equals((view.grade*100.0).format("%+.1f")+"%") ||
+                    !view.renderedValues[1].equals(view.getDistanceString(view.distLight)) ||
+                    !view.renderedValues[2].equals((view.vam*(view.isMetric ? 1.0 : 3.28084)).format("%.0f")) ||
+                    !view.renderedValues[3].equals((view.maxGrade*100.0).format("%.1f")+"%") ||
+                    !view.renderedValues[4].equals(view.getDistanceString(view.distSteep)) ||
+                    !view.renderedValues[5].equals(ascent) ||
+                    !view.getStatusString().equals("ACTIVE "+(view.quality*100.0).format("%.0f")+"%")) {
+                    logger.error("Display mismatch unit="+unit+" case="+i);
+                    return false;
+                }
+            }
+        }
+    }
+    view.onTimerPause(); view.onUpdate(dc);
+    if (!view.renderedValues[0].equals("--") || !view.getStatusString().equals("PAUSED")) { return false; }
+    view.onTimerReset(); view.onUpdate(dc);
+    return view.renderedValues[5].equals("--") && view.renderedValues[1].equals("0ft");
+}
+
 function referenceFont(dc, text, width, height, numeric) {
     var fonts=numeric ? [Graphics.FONT_SYSTEM_NUMBER_MEDIUM,Graphics.FONT_SYSTEM_MEDIUM,
         Graphics.FONT_SYSTEM_SMALL,Graphics.FONT_SYSTEM_TINY,Graphics.FONT_SYSTEM_XTINY] :
