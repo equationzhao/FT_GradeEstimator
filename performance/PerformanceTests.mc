@@ -221,6 +221,11 @@ function extendedPerformanceAA(logger as Test.Logger) as Boolean { return extend
 (:test)
 function fitPerformanceAA(logger as Test.Logger) as Boolean { return extendedComparison(logger,true,8,8); }
 
+(:test)
+function adaptive20PerformanceAA(logger as Test.Logger) as Boolean { return extendedComparison(logger,true,6,6); }
+(:test)
+function adaptive20PerformanceAB(logger as Test.Logger) as Boolean { return extendedComparison(logger,false,6,6); }
+
 function extendedComparison(logger,identical,firstMode,lastMode) {
     var bitmaps=[];
     var dimensions=[[246,78],[246,106],[246,160],[200,70]];
@@ -250,7 +255,7 @@ function extendedComparison(logger,identical,firstMode,lastMode) {
         var count=mode<=8 ? 1200 : (mode<=10 ? 600 : (mode==12 ? 60 : 500));
         var inputs=mode==9 || mode==10 ? preparedInputs(mode,count) : null;
         performanceSetup(a,mode); performanceSetup(b,mode);
-        var warmUntil=System.getTimer()+(mode==firstMode || mode==11 ? 30000 : 1000);
+        var warmUntil=System.getTimer()+(mode==firstMode ? 60000 : (mode==11 ? 30000 : 1000));
         while(System.getTimer()<warmUntil) {
             performanceSetup(a,mode); performanceSetup(b,mode);
             extendedBatch(a,bitmaps,mode,count,inputs,true,identical);

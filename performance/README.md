@@ -89,7 +89,11 @@ Keys 9–10 still time input assignment and `compute()`, but not input generatio
 their times must not be compared to the original timing boundary. Key 12 includes
 construction because an isolated first draw is too short for the millisecond timer.
 Four native bitmaps cover 246 × 78, 246 × 106, 246 × 160 and 200 × 70 fields.
-The first compute and first drawing workload each receive 30 seconds of warm-up.
+The first extended workload receives 60 seconds of warm-up; the first later
+drawing workload receives 30 seconds. Round 10 exposed compute startup outliers
+after 30 seconds, so its focused `adaptive20PerformanceAA` /
+`adaptive20PerformanceAB` checks use the longer warm-up. Older raw runs retain
+their original 30-second boundary; compare A/B pairs within each run.
 FIT registration happens after constructing test views, outside measured batches;
 both views must have real native fields and no registration or write error.
 They share one native field registration and write sequentially, because the
