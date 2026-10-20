@@ -411,7 +411,7 @@ class GradeEstimatorView extends WatchUi.DataField {
 
         var gradeLoggingEnabled = Application.Properties.getValue("enable_grade_logging");
         if (gradeLoggingEnabled instanceof Boolean) { GRADE_LOGGING_ENALBED = gradeLoggingEnabled; }
-        else { GRADE_LOGGING_ENALBED = true; }
+        else { GRADE_LOGGING_ENALBED = false; }
 
         var bufferLen = Application.Properties.getValue("buffer_length");
         if (bufferLen instanceof Number) { SAMPLE_WINDOW = bufferLen; }
@@ -419,26 +419,26 @@ class GradeEstimatorView extends WatchUi.DataField {
 
         var minWin = Application.Properties.getValue("buffer_fit_min");
         if (minWin instanceof Number) { MIN_GRADE_WINDOW = minWin; }
-        else { MIN_GRADE_WINDOW = 5; }
+        else { MIN_GRADE_WINDOW = 7; }
 
         var maxWin = Application.Properties.getValue("buffer_fit_max");
         if (maxWin instanceof Number) { MAX_GRADE_WINDOW = maxWin; }
-        else { MAX_GRADE_WINDOW = 30; }
+        else { MAX_GRADE_WINDOW = 20; }
 
         var distQuality = Application.Properties.getValue("threshold_log_dist");
-        if (distQuality instanceof Float) { DIST_LOG_QUALITY = distQuality; }
+        if (distQuality instanceof Float || distQuality instanceof Number) { DIST_LOG_QUALITY = distQuality.toFloat(); }
         else { DIST_LOG_QUALITY = 0.33; }
 
         var maxQuality = Application.Properties.getValue("threshold_log_max");
-        if (maxQuality instanceof Float) { MAX_LOG_QUALITY = maxQuality; }
+        if (maxQuality instanceof Float || maxQuality instanceof Number) { MAX_LOG_QUALITY = maxQuality.toFloat(); }
         else { MAX_LOG_QUALITY = 0.5; }
 
         var thresholdLight = Application.Properties.getValue("threshold_light");
-        if (thresholdLight instanceof Float) { THRESHOLD_LIGHT = thresholdLight / 100.0; }
+        if (thresholdLight instanceof Float || thresholdLight instanceof Number) { THRESHOLD_LIGHT = thresholdLight / 100.0; }
         else { THRESHOLD_LIGHT = 0.05; }
 
         var thresholdSteep = Application.Properties.getValue("threshold_steep");
-        if (thresholdSteep instanceof Float) { THRESHOLD_STEEP = thresholdSteep / 100.0; }
+        if (thresholdSteep instanceof Float || thresholdSteep instanceof Number) { THRESHOLD_STEEP = thresholdSteep / 100.0; }
         else { THRESHOLD_STEEP = 0.10; }
 
         small_layout_draw_style = Application.Properties.getValue("small_field_data");
@@ -454,6 +454,13 @@ class GradeEstimatorView extends WatchUi.DataField {
         if (SAMPLE_WINDOW > 180) { SAMPLE_WINDOW = 180; }
         else if (SAMPLE_WINDOW < 10) { SAMPLE_WINDOW = 10; }
 
+        if (MIN_GRADE_WINDOW > 180) { MIN_GRADE_WINDOW = 180; }
+        if (MAX_GRADE_WINDOW > 180) { MAX_GRADE_WINDOW = 180; }
+        if (DIST_LOG_QUALITY < 0.0) { DIST_LOG_QUALITY = 0.0; }
+        else if (DIST_LOG_QUALITY > 1.0) { DIST_LOG_QUALITY = 1.0; }
+        if (MAX_LOG_QUALITY < 0.0) { MAX_LOG_QUALITY = 0.0; }
+        else if (MAX_LOG_QUALITY > 1.0) { MAX_LOG_QUALITY = 1.0; }
+        if (histogram != null) { histogram.minQuality = MAX_LOG_QUALITY; }
         if (MIN_GRADE_WINDOW < 3) { MIN_GRADE_WINDOW = 3; }
         if (MAX_GRADE_WINDOW < MIN_GRADE_WINDOW) { MAX_GRADE_WINDOW = MIN_GRADE_WINDOW; }
         if (SAMPLE_WINDOW < MAX_GRADE_WINDOW) { SAMPLE_WINDOW = MAX_GRADE_WINDOW; }
