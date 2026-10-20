@@ -193,7 +193,8 @@ class GradeEstimatorView extends WatchUi.DataField {
     function useGradeFocusLayout() as Boolean { return layout == LAYOUT_WIDE || layout == LAYOUT_LARGE; }
 
     function getHeldGradeString(seconds as Float) as String {
-        return histogram.getHighGradeForTime(seconds).format("%.1f") + "%";
+        var value = histogram.getHighGradeForTime(seconds);
+        return value == null ? "--" : value.format("%.1f") + "%";
     }
 
     function getDynamicHeldGradeSeconds() as Float {
@@ -210,7 +211,7 @@ class GradeEstimatorView extends WatchUi.DataField {
         if (halfTrackedSeconds >= 60.0) { return 60.0; }
         if (halfTrackedSeconds < 10.0) { return 10.0; }
 
-        return halfTrackedSeconds;
+        return 10.0;
     }
 
     function getHeldGradeTimeLabel(seconds as Float) as String {
@@ -651,11 +652,15 @@ class GradeEstimatorView extends WatchUi.DataField {
         
         if (climbDistField != null) { climbDistField.setData(climbDistString); } else { }
 
-        var maxGrdTime = histogram.getHighGradeForTime(10).format("%.1f");
-        maxGrdTime += "/" + histogram.getHighGradeForTime(60).format("%.1f");
-        maxGrdTime += "/" + histogram.getHighGradeForTime(1800).format("%.1f");
+        var maxGrdTime = getLoggedHeldGrade(10.0) + "/" + getLoggedHeldGrade(60.0) + "/" + getLoggedHeldGrade(1800.0);
 
+        if (maxGrdTime.length() + 1 > 16) { maxGrdTime = "NA/NA/NA"; }
         if (maxGradeForTimeField != null) { maxGradeForTimeField.setData(maxGrdTime); } else { }
+    }
+
+    function getLoggedHeldGrade(seconds as Float) as String {
+        var value = histogram.getHighGradeForTime(seconds);
+        return value == null ? "NA" : value.format("%.1f");
     }
 
     function compute(info as Activity.Info) as Number {
@@ -1242,5 +1247,6 @@ class GradeEstimatorView extends WatchUi.DataField {
         calculating = false;
         gradeWindowSize = MIN_GRADE_WINDOW; // Reset adaptive window size
         prevAltitude = null; // Reset previous median altitude
+        if (histogram != null) { histogram.breakSequence(); }
     }
 }
