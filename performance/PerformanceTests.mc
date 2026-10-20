@@ -73,6 +73,12 @@ function performanceAB(logger as Test.Logger) as Boolean {
         performanceSetup(b,mode); b.onUpdate(dc);
         var bMemory=System.getSystemStats().usedMemory-before;
         logger.debug("MEM mode="+mode+" a="+aMemory+" b="+bMemory);
+        // A newly loaded program exhibits several seconds of cold simulator
+        // overhead. Warm both drawing paths before collecting the first pair.
+        if (mode==0) {
+            performanceBatch(a,dc,mode,5000);
+            performanceBatch(b,dc,mode,5000);
+        }
         performanceBatch(a,dc,mode,80); performanceBatch(b,dc,mode,80);
         for (var pair=0;pair<9;pair++) {
             performanceSetup(a,mode); performanceSetup(b,mode);

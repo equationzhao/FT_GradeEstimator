@@ -33,10 +33,13 @@ summary, rather than relying on the runner's exit status.
 - Report paired percentage changes, medians, raw samples, and a bootstrap 95%
   interval. Treat pairs within one simulator process as correlated observations,
   not nine independent physical-device trials.
-- Accept CPU improvements only when the paired median exceeds 3%, the interval's
-  lower endpoint exceeds 3%, and at least eight of nine pairs improve. Raise this
+- Accept CPU improvements only when the paired median exceeds 5%, the interval's
+  lower endpoint exceeds 5%, and at least eight of nine pairs improve. Raise this
   threshold if the A/A control exhibits larger systematic variation. Confirm a
   candidate with another run when noise or regressions make the result unclear.
+  Initial A/A runs showed up to 3.5% median variation and large cold-drawing
+  outliers, so the threshold is 5% and the first drawing scenario receives
+  5,000 extra warm-up iterations per implementation.
 - Memory-only improvements may be accepted when storage is deterministically
   reduced, allocation measurements confirm the reduction, and timing does not
   show a clear regression. Memory readings around construction and first drawing
