@@ -69,3 +69,35 @@ Keep these correctness cases in the existing regression suite.
 
 Simulator timings establish relative performance for these workloads. They do
 not establish real-device battery savings or total firmware CPU use.
+
+## Additional workloads
+
+`extendedPerformanceAB` and `extendedPerformanceAA` use the same nine-pair rule:
+
+| Key | Workload |
+| --- | --- |
+| 6 | Adaptive 7–20 window, alternating climbs, descents and altitude noise |
+| 7 | Same input with adaptive 7–180 window |
+| 8 | Native FIT grade recording enabled, with pause/resume callbacks and stopped samples |
+| 9 | Default calculation with inputs generated before timing |
+| 10 | Adaptive 7–180 calculation with inputs generated before timing |
+| 11 | Imperial dynamic drawing in a 246 × 160 field |
+| 12 | View construction plus first drawing, alternating units and field sizes |
+| 13 | Repeated size and unit changes, including the undersized-field hint |
+
+Keys 9–10 still time input assignment and `compute()`, but not input generation;
+their times must not be compared to the original timing boundary. Key 12 includes
+construction because an isolated first draw is too short for the millisecond timer.
+Four native bitmaps cover 246 × 78, 246 × 106, 246 × 160 and 200 × 70 fields.
+The first compute and first drawing workload each receive 30 seconds of warm-up.
+FIT registration happens after constructing test views, outside measured batches;
+both views must have real native fields and no registration or write error.
+They share one native field registration and write sequentially, because the
+simulator rejects duplicate field IDs within one application. This measures native
+`setData()` calls, not FIT-file serialization or transfer to a physical device.
+
+`adaptiveWindowDiagnostics` reports unchanged/growing/shrinking windows and their
+length distribution separately from timing. `adaptiveReferenceParity` compares
+9,600 additional samples against the frozen reference, including changing windows,
+pause/resume and slopes above the display clamp. Diagnostics never run inside a
+timed batch. Keep the original six workloads and report their results separately.

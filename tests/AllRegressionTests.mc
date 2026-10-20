@@ -8,9 +8,13 @@ import Toybox.Graphics;
 
 class RecordingDisplayView extends GradeEstimatorView {
     var renderedValues=["","","","","",""];
+    var renderedGeometry=[null,null,null,null,null,null];
+    var drawCount=0;
     function initialize() { GradeEstimatorView.initialize(); }
     function drawCell(dc,label,value,x,y,width,height,cell) {
         renderedValues[cell]=value;
+        renderedGeometry[cell]=[x,y,width,height];
+        drawCount++;
         GradeEstimatorView.drawCell(dc,label,value,x,y,width,height,cell);
     }
 }
@@ -419,4 +423,37 @@ function twoHourRideRemainsStable(logger as Test.Logger) as Boolean {
     logger.debug("2h grade="+v.grade.toString()+" distance="+v.distLight.toString());
     return v.calculating && (v.grade-0.1).abs()<0.001 && v.altitudes.size()==v.MAX_GRADE_WINDOW && v.sampleDistances.size()==v.MAX_GRADE_WINDOW &&
         v.regressionDistances.size()==20 && v.distLight>21000.0;
+}
+
+(:test)
+function layoutSwitchesAndFirstDraw(logger as Test.Logger) as Boolean {
+    restoreTestProperties(); var v=new RecordingDisplayView();
+    var sizes=[[246,106],[246,78],[246,160],[221,79],[200,70],[246,106]];
+    for(var pass=0;pass<2;pass++) {
+        v.isMetric=pass==0;
+        if(pass==1) { Application.Properties.setValue("threshold_light",12.5); v.updateSettings(); }
+        for(var k=0;k<sizes.size();k++) {
+            var w=sizes[k][0]; var h=sizes[k][1];
+            var bitmap=Graphics.createBufferedBitmap({:width=>w,:height=>h,
+                :palette=>[Graphics.COLOR_BLACK,Graphics.COLOR_WHITE]}).get();
+            var dc=bitmap.getDc(); v.drawCount=0;
+            v.onUpdate(dc);
+            if(w<220 || h<78) { if(v.drawCount!=0) { return false; } continue; }
+            if(v.drawCount!=6) { return false; }
+            var sh=(h*0.16).toNumber(); if(sh>18) { sh=18; }
+            var rh=(h-sh)/2; var cw=w/3;
+            var labels=["Grade",v.lightLabel,"VAM "+(v.isMetric ? "m/h" : "ft/h"),"Max Grade",v.steepLabel,"Total Ascent"];
+            for(var cell=0;cell<6;cell++) {
+                var col=cell%3; var row=cell/3;
+                var width=col==2 ? w-2*cw : cw;
+                var geometry=v.renderedGeometry[cell];
+                if(geometry[0]!=col*cw || geometry[1]!=sh+row*rh || geometry[2]!=width || geometry[3]!=rh) { return false; }
+                var lh=(rh*0.34).toNumber();
+                if(v.labelFonts[cell]!=referenceFont(dc,labels[cell],width-2,lh,false) ||
+                   v.valueFonts[cell]!=referenceFont(dc,v.renderedValues[cell],width-2,rh-lh,true)) { return false; }
+            }
+            if(v.valueFonts[6]!=referenceFont(dc,v.getStatusString(),w-55,sh,false)) { return false; }
+        }
+    }
+    restoreTestProperties(); return true;
 }
